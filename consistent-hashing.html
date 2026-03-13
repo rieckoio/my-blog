@@ -88,450 +88,696 @@
 <h2>什么是一致性哈希</h2>
 <p><strong>一致性哈希</strong>（Consistent Hashing）是一种特殊的哈希算法，由 MIT 的 David Karger 等人在 1997 年提出，主要用于分布式缓存系统中。</p>
 <h3>核心特点</h3>
-<table>
-<thead>
-<tr>
-<th>特性</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><strong>分散性</strong></td>
-<td>数据均匀分布在各个节点上</td>
-</tr>
-<tr>
-<td><strong>单调性</strong></td>
-<td>添加/删除节点时，只影响部分数据</td>
-</tr>
-<tr>
-<td><strong>平衡性</strong></td>
-<td>各节点负载相对均衡</td>
-</tr>
-<tr>
-<td><strong>低迁移率</strong></td>
-<td>节点变化时，数据迁移量最小化</td>
-</tr>
-</tbody></table>
+<div class="feature-grid">
+  <div class="feature-card">
+    <div class="feature-icon">🎯</div>
+    <h4>分散性</h4>
+    <p>数据均匀分布在各个节点上</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">📈</div>
+    <h4>单调性</h4>
+    <p>添加/删除节点时，只影响部分数据</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">⚖️</div>
+    <h4>平衡性</h4>
+    <p>各节点负载相对均衡</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">🔄</div>
+    <h4>低迁移率</h4>
+    <p>节点变化时，数据迁移量最小化</p>
+  </div>
+</div>
+
 <hr>
 <h2>为什么需要一致性哈希</h2>
 <h3>传统哈希的问题</h3>
 <p>在传统哈希方案中，数据映射公式为：</p>
-<pre><code>node_index = hash(key) % node_count
-</code></pre>
+<div class="code-block">
+  <div class="code-header">哈希公式</div>
+  <code>node_index = hash(key) % node_count</code>
+</div>
+
 <p><strong>问题场景</strong>：假设有 3 个节点，1000 条数据</p>
-<pre><code>初始状态：
-节点 A: 333 条数据
-节点 B: 333 条数据
-节点 C: 334 条数据
+<div class="comparison-container">
+  <div class="comparison-card problem">
+    <div class="card-header">
+      <span class="card-icon">❌</span>
+      <h4>传统哈希 - 初始状态</h4>
+    </div>
+    <div class="card-content">
+      <div class="stat-bar">
+        <span class="stat-label">节点 A</span>
+        <div class="stat-fill" style="width: 33.3%"></div>
+        <span class="stat-value">333 条数据</span>
+      </div>
+      <div class="stat-bar">
+        <span class="stat-label">节点 B</span>
+        <div class="stat-fill" style="width: 33.3%"></div>
+        <span class="stat-value">333 条数据</span>
+      </div>
+      <div class="stat-bar">
+        <span class="stat-label">节点 C</span>
+        <div class="stat-fill" style="width: 33.4%"></div>
+        <span class="stat-value">334 条数据</span>
+      </div>
+    </div>
+  </div>
+  
+  <div class="arrow-divider">→ 节点 C 宕机 →</div>
+  
+  <div class="comparison-card problem">
+    <div class="card-header">
+      <span class="card-icon">⚠️</span>
+      <h4>传统哈希 - 宕机后</h4>
+    </div>
+    <div class="card-content">
+      <div class="stat-bar">
+        <span class="stat-label">节点 A</span>
+        <div class="stat-fill danger" style="width: 50%"></div>
+        <span class="stat-value">500 条数据</span>
+      </div>
+      <div class="stat-bar">
+        <span class="stat-label">节点 B</span>
+        <div class="stat-fill danger" style="width: 50%"></div>
+        <span class="stat-value">500 条数据</span>
+      </div>
+      <div class="alert-text">❌ 几乎所有数据都需要重新映射！缓存命中率暴跌！</div>
+    </div>
+  </div>
+</div>
 
-当节点 C 宕机后：
-node_index = hash(key) % 2  ← 除数变了！
-
-结果：几乎所有数据都需要重新映射
-- 节点 A: 500 条数据（新增 167 条）
-- 节点 B: 500 条数据（新增 167 条）
-- 缓存命中率暴跌！
-</code></pre>
 <h3>一致性哈希的优势</h3>
-<pre><code>一致性哈希方案：
-当节点 C 宕机后：
-- 只有 C 节点的数据需要迁移
-- 其他节点的数据基本不受影响
-- 缓存命中率保持在较高水平
-</code></pre>
+<div class="comparison-card success">
+  <div class="card-header">
+    <span class="card-icon">✅</span>
+    <h4>一致性哈希方案</h4>
+  </div>
+  <div class="card-content">
+    <div class="benefit-list">
+      <div class="benefit-item">
+        <span class="check-icon">✓</span>
+        <span>只有 C 节点的数据需要迁移</span>
+      </div>
+      <div class="benefit-item">
+        <span class="check-icon">✓</span>
+        <span>其他节点的数据基本不受影响</span>
+      </div>
+      <div class="benefit-item">
+        <span class="check-icon">✓</span>
+        <span>缓存命中率保持在较高水平</span>
+      </div>
+    </div>
+  </div>
+</div>
+
 <hr>
 <h2>工作原理</h2>
 <h3>1. 哈希环</h3>
 <p>一致性哈希将整个哈希值空间组织成一个<strong>虚拟的圆环</strong>：</p>
-<pre><code>                    哈希环 (0 ~ 2^32-1)
-                    
-                         0 (2^32)
-                           ↑
-                          / \
-                         /   \
-              节点 A ←  •     •  → 节点 B
-                       |       |
-                       |       |
-              数据 X ←  •       •  → 数据 Y
-                         \   /
-                          \ /
-                           ↓
-                        节点 C
-</code></pre>
-<h3>2. 数据映射规则</h3>
-<pre><code>┌─────────────────────────────────────────────────────────┐
-│  映射规则：顺时针查找第一个节点                           │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│  1. 计算数据的哈希值，映射到环上                          │
-│  2. 沿顺时针方向查找，遇到的第一个节点即为存储节点         │
-│  3. 如果该节点宕机，继续顺时针找下一个节点                │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
-</code></pre>
-<h3>3. 节点变化影响</h3>
-<pre><code>添加节点 D：
+<div class="hash-ring-container">
+  <svg class="hash-ring" viewBox="0 0 400 400">
+    <!-- 外环 -->
+    <circle cx="200" cy="200" r="150" fill="none" stroke="#3498db" stroke-width="3" stroke-dasharray="5,5"/>
+    
+<pre><code>&lt;!-- 顶部 0 点 --&gt;
+&lt;circle cx=&quot;200&quot; cy=&quot;50&quot; r=&quot;8&quot; fill=&quot;#2c3e50&quot;/&gt;
+&lt;text x=&quot;200&quot; y=&quot;35&quot; text-anchor=&quot;middle&quot; class=&quot;ring-label&quot;&gt;0 (2³²)&lt;/text&gt;
 
-        添加前                    添加后
-        
-           A                         A
-         /   \                     /   \
-        •     •  B               •  D  •  B
-        |     |       →          | /   |
-        |     |                  |/    |
-        •     •  C               •     •  C
-        
-影响范围：只有 B→C 之间的数据需要迁移到 D
+&lt;!-- 节点 A --&gt;
+&lt;circle cx=&quot;95&quot; cy=&quot;135&quot; r=&quot;12&quot; fill=&quot;#e74c3c&quot;/&gt;
+&lt;text x=&quot;50&quot; y=&quot;140&quot; class=&quot;ring-node&quot;&gt;节点 A&lt;/text&gt;
+
+&lt;!-- 节点 B --&gt;
+&lt;circle cx=&quot;305&quot; cy=&quot;135&quot; r=&quot;12&quot; fill=&quot;#27ae60&quot;/&gt;
+&lt;text x=&quot;330&quot; y=&quot;140&quot; class=&quot;ring-node&quot;&gt;节点 B&lt;/text&gt;
+
+&lt;!-- 节点 C --&gt;
+&lt;circle cx=&quot;200&quot; cy=&quot;350&quot; r=&quot;12&quot; fill=&quot;#f39c12&quot;/&gt;
+&lt;text x=&quot;200&quot; y=&quot;380&quot; text-anchor=&quot;middle&quot; class=&quot;ring-node&quot;&gt;节点 C&lt;/text&gt;
+
+&lt;!-- 数据 X --&gt;
+&lt;circle cx=&quot;110&quot; cy=&quot;280&quot; r=&quot;6&quot; fill=&quot;#9b59b6&quot;/&gt;
+&lt;text x=&quot;55&quot; y=&quot;285&quot; class=&quot;ring-data&quot;&gt;数据 X&lt;/text&gt;
+&lt;line x1=&quot;110&quot; y1=&quot;280&quot; x2=&quot;95&quot; y2=&quot;135&quot; stroke=&quot;#9b59b6&quot; stroke-width=&quot;2&quot; stroke-dasharray=&quot;3,3&quot;/&gt;
+
+&lt;!-- 数据 Y --&gt;
+&lt;circle cx=&quot;290&quot; cy=&quot;280&quot; r=&quot;6&quot; fill=&quot;#9b59b6&quot;/&gt;
+&lt;text x=&quot;315&quot; y=&quot;285&quot; class=&quot;ring-data&quot;&gt;数据 Y&lt;/text&gt;
+&lt;line x1=&quot;290&quot; y1=&quot;280&quot; x2=&quot;305&quot; y2=&quot;135&quot; stroke=&quot;#9b59b6&quot; stroke-width=&quot;2&quot; stroke-dasharray=&quot;3,3&quot;/&gt;
+
+&lt;!-- 顺时针箭头 --&gt;
+&lt;path d=&quot;M 200 60 A 140 140 0 0 1 340 200&quot; fill=&quot;none&quot; stroke=&quot;#95a5a6&quot; stroke-width=&quot;2&quot; marker-end=&quot;url(#arrowhead)&quot;/&gt;
+&lt;text x=&quot;320&quot; y=&quot;100&quot; class=&quot;ring-arrow&quot;&gt;顺时针&lt;/text&gt;
+
+&lt;!-- 箭头定义 --&gt;
+&lt;defs&gt;
+  &lt;marker id=&quot;arrowhead&quot; markerWidth=&quot;10&quot; markerHeight=&quot;7&quot; refX=&quot;9&quot; refY=&quot;3.5&quot; orient=&quot;auto&quot;&gt;
+    &lt;polygon points=&quot;0 0, 10 3.5, 0 7&quot; fill=&quot;#95a5a6&quot;/&gt;
+  &lt;/marker&gt;
+&lt;/defs&gt;
 </code></pre>
+  </svg>
+  <div class="hash-ring-legend">
+    <h4>哈希环示意图</h4>
+    <div class="legend-item">
+      <span class="legend-color" style="background: #2c3e50"></span>
+      <span>哈希值起点 (0)</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-color" style="background: #e74c3c"></span>
+      <span>节点 A</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-color" style="background: #27ae60"></span>
+      <span>节点 B</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-color" style="background: #f39c12"></span>
+      <span>节点 C</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-color" style="background: #9b59b6"></span>
+      <span>数据</span>
+    </div>
+  </div>
+</div>
+
+<h3>2. 数据映射规则</h3>
+<div class="rule-box">
+  <div class="rule-header">
+    <span class="rule-icon">📐</span>
+    <h4>映射规则：顺时针查找第一个节点</h4>
+  </div>
+  <div class="rule-steps">
+    <div class="rule-step">
+      <span class="step-number">1</span>
+      <span class="step-text">计算数据的哈希值，映射到环上</span>
+    </div>
+    <div class="rule-step">
+      <span class="step-number">2</span>
+      <span class="step-text">沿顺时针方向查找，遇到的第一个节点即为存储节点</span>
+    </div>
+    <div class="rule-step">
+      <span class="step-number">3</span>
+      <span class="step-text">如果该节点宕机，继续顺时针找下一个节点</span>
+    </div>
+  </div>
+</div>
+
+<h3>3. 节点变化影响</h3>
+<div class="node-change-container">
+  <div class="change-card">
+    <div class="change-title">添加节点 D 前</div>
+    <svg class="change-diagram" viewBox="0 0 200 200">
+      <circle cx="100" cy="100" r="80" fill="none" stroke="#bdc3c7" stroke-width="2"/>
+      <circle cx="100" cy="20" r="10" fill="#e74c3c"/>
+      <text x="100" y="15" text-anchor="middle" class="small-label">A</text>
+      <circle cx="165" cy="65" r="10" fill="#27ae60"/>
+      <text x="180" y="70" class="small-label">B</text>
+      <circle cx="100" cy="180" r="10" fill="#f39c12"/>
+      <text x="100" y="195" text-anchor="middle" class="small-label">C</text>
+    </svg>
+  </div>
+  
+  <div class="change-arrow">→</div>
+  
+  <div class="change-card">
+    <div class="change-title">添加节点 D 后</div>
+    <svg class="change-diagram" viewBox="0 0 200 200">
+      <circle cx="100" cy="100" r="80" fill="none" stroke="#bdc3c7" stroke-width="2"/>
+      <circle cx="100" cy="20" r="10" fill="#e74c3c"/>
+      <text x="100" y="15" text-anchor="middle" class="small-label">A</text>
+      <circle cx="165" cy="65" r="10" fill="#27ae60"/>
+      <text x="180" y="70" class="small-label">B</text>
+      <circle cx="100" cy="180" r="10" fill="#f39c12"/>
+      <text x="100" y="195" text-anchor="middle" class="small-label">C</text>
+      <circle cx="145" cy="145" r="10" fill="#3498db"/>
+      <text x="145" y="160" text-anchor="middle" class="small-label">D</text>
+      <path d="M 165 75 Q 155 110 145 135" fill="none" stroke="#3498db" stroke-width="2" stroke-dasharray="3,3" marker-end="url(#arrow2)"/>
+      <defs>
+        <marker id="arrow2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+          <polygon points="0 0, 10 3.5, 0 7" fill="#3498db"/>
+        </marker>
+      </defs>
+    </svg>
+  </div>
+</div>
+
+<div class="impact-note">
+  <span class="note-icon">💡</span>
+  <span class="note-text"><strong>影响范围：</strong>只有 B→C 之间的数据需要迁移到 D，其他区域不受影响</span>
+</div>
+
 <hr>
 <h2>虚拟节点</h2>
 <h3>数据倾斜问题</h3>
 <p>当物理节点较少时，数据分布可能不均匀：</p>
-<pre><code>哈希环示例：
+<div class="imbalance-demo">
+  <div class="ring-small">
+    <svg viewBox="0 0 150 150">
+      <circle cx="75" cy="75" r="60" fill="none" stroke="#bdc3c7" stroke-width="2"/>
+      <circle cx="75" cy="15" r="12" fill="#e74c3c" style="filter: drop-shadow(0 0 10px rgba(231,76,60,0.5))"/>
+      <text x="75" y="10" text-anchor="middle" class="small-label">节点 A</text>
+      <circle cx="75" cy="135" r="12" fill="#27ae60"/>
+      <text x="75" y="150" text-anchor="middle" class="small-label">节点 B</text>
+      <path d="M 75 27 L 75 123" stroke="#e74c3c" stroke-width="4" opacity="0.3"/>
+    </svg>
+  </div>
+  <div class="imbalance-stats">
+    <div class="stat-row">
+      <span class="stat-dot" style="background: #e74c3c"></span>
+      <span>节点 A 负载 <strong>80%</strong></span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-dot" style="background: #27ae60"></span>
+      <span>节点 B 负载 <strong>20%</strong></span>
+    </div>
+  </div>
+</div>
 
-    节点 A
-       ↑
-      / \
-     /   \
-    •     •  
-    |     |  ← 节点 A 负责大部分数据
-    |     |
-    •     •
-     \   /
-      \ /
-       ↓
-    节点 B
-
-结果：节点 A 负载 80%，节点 B 负载 20%
-</code></pre>
 <h3>解决方案：虚拟节点</h3>
 <p>为每个物理节点创建多个<strong>虚拟节点</strong>：</p>
-<pre><code>物理节点 → 虚拟节点映射
+<div class="virtual-node-grid">
+  <div class="vn-card">
+    <div class="vn-header">
+      <span class="vn-icon">🔵</span>
+      <h4>节点 A</h4>
+    </div>
+    <div class="vn-list">A1, A2, A3, ..., A100</div>
+  </div>
+  <div class="vn-card">
+    <div class="vn-header">
+      <span class="vn-icon">🟢</span>
+      <h4>节点 B</h4>
+    </div>
+    <div class="vn-list">B1, B2, B3, ..., B100</div>
+  </div>
+  <div class="vn-card">
+    <div class="vn-header">
+      <span class="vn-icon">🟡</span>
+      <h4>节点 C</h4>
+    </div>
+    <div class="vn-list">C1, C2, C3, ..., C100</div>
+  </div>
+</div>
 
-节点 A → A1, A2, A3, ..., A100
-节点 B → B1, B2, B3, ..., B100
-节点 C → C1, C2, C3, ..., C100
+<div class="balanced-result">
+  <div class="result-icon">✅</div>
+  <div class="result-text">数据均匀分布，每个物理节点负责约 <strong>33%</strong> 的数据</div>
+</div>
 
-哈希环：
-
-    A1
-   /  \
-  C5   B2
- /      \
-B8       A3
- \      /
-  C2   A7
-   \  /
-    B5
-
-结果：数据均匀分布，每个物理节点负责约 33% 的数据
-</code></pre>
 <h3>虚拟节点数量建议</h3>
-<table>
-<thead>
-<tr>
-<th>场景</th>
-<th>虚拟节点数</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>小型集群（&lt;10 节点）</td>
-<td>100-200</td>
-<td>保证数据均匀分布</td>
-</tr>
-<tr>
-<td>中型集群（10-100 节点）</td>
-<td>50-100</td>
-<td>平衡性能和分布</td>
-</tr>
-<tr>
-<td>大型集群（&gt;100 节点）</td>
-<td>20-50</td>
-<td>减少环上节点数量</td>
-</tr>
-</tbody></table>
+<div class="recommendation-table">
+  <div class="table-header">
+    <div class="th">场景</div>
+    <div class="th">虚拟节点数</div>
+    <div class="th">说明</div>
+  </div>
+  <div class="table-row">
+    <div class="td">
+      <span class="badge small">小型</span>
+      集群（&lt;10 节点）
+    </div>
+    <div class="td"><code>100-200</code></div>
+    <div class="td">保证数据均匀分布</div>
+  </div>
+  <div class="table-row">
+    <div class="td">
+      <span class="badge medium">中型</span>
+      集群（10-100 节点）
+    </div>
+    <div class="td"><code>50-100</code></div>
+    <div class="td">平衡性能和分布</div>
+  </div>
+  <div class="table-row">
+    <div class="td">
+      <span class="badge large">大型</span>
+      集群（&gt;100 节点）
+    </div>
+    <div class="td"><code>20-50</code></div>
+    <div class="td">减少环上节点数量</div>
+  </div>
+</div>
+
 <hr>
 <h2>代码实现</h2>
 <h3>Python 实现示例</h3>
-<pre><code class="language-python">import hashlib
+<div class="code-block large">
+  <div class="code-header">
+    <span class="code-lang">Python</span>
+    <span class="code-desc">一致性哈希实现（支持虚拟节点）</span>
+  </div>
+  <pre><code class="language-python">import hashlib
 import bisect
 from typing import Dict, List, Any
 
-class ConsistentHash:
-    &quot;&quot;&quot;一致性哈希实现（支持虚拟节点）&quot;&quot;&quot;
+<p>class ConsistentHash:
+    &quot;&quot;&quot;一致性哈希实现（支持虚拟节点）&quot;&quot;&quot;</p>
+<pre><code>def __init__(self, nodes: List[str] = None, virtual_nodes: int = 100):
+    self.virtual_nodes = virtual_nodes
+    self.ring: Dict[int, str] = {}
+    self.sorted_keys: List[int] = []
     
-    def __init__(self, nodes: List[str] = None, virtual_nodes: int = 100):
-        &quot;&quot;&quot;
-        初始化一致性哈希环
-        
-        Args:
-            nodes: 初始节点列表
-            virtual_nodes: 每个物理节点的虚拟节点数量
-        &quot;&quot;&quot;
-        self.virtual_nodes = virtual_nodes
-        self.ring: Dict[int, str] = {}  # 哈希值 → 节点名
-        self.sorted_keys: List[int] = []  # 排序后的哈希值列表
-        
-        # 添加初始节点
-        if nodes:
-            for node in nodes:
-                self.add_node(node)
-    
-    def _hash(self, key: str) -&gt; int:
-        &quot;&quot;&quot;计算 key 的哈希值（32 位）&quot;&quot;&quot;
-        return int(hashlib.md5(key.encode()).hexdigest(), 16) % (2 ** 32)
-    
-    def add_node(self, node: str) -&gt; None:
-        &quot;&quot;&quot;添加节点（包括虚拟节点）&quot;&quot;&quot;
-        for i in range(self.virtual_nodes):
-            virtual_key = f&quot;{node}#{i}&quot;
-            hash_value = self._hash(virtual_key)
-            
-            self.ring[hash_value] = node
-            bisect.insort(self.sorted_keys, hash_value)
-    
-    def remove_node(self, node: str) -&gt; None:
-        &quot;&quot;&quot;移除节点&quot;&quot;&quot;
-        for i in range(self.virtual_nodes):
-            virtual_key = f&quot;{node}#{i}&quot;
-            hash_value = self._hash(virtual_key)
-            
-            if hash_value in self.ring:
-                del self.ring[hash_value]
-                self.sorted_keys.remove(hash_value)
-    
-    def get_node(self, key: str) -&gt; str:
-        &quot;&quot;&quot;获取 key 应该存储的节点&quot;&quot;&quot;
-        if not self.ring:
-            raise Exception(&quot;哈希环为空&quot;)
-        
-        hash_value = self._hash(key)
-        
-        # 二分查找顺时针第一个节点
-        idx = bisect.bisect(self.sorted_keys, hash_value)
-        if idx &gt;= len(self.sorted_keys):
-            idx = 0
-        
-        return self.ring[self.sorted_keys[idx]]
-    
-    def get_distribution(self) -&gt; Dict[str, int]:
-        &quot;&quot;&quot;获取当前数据分布统计&quot;&quot;&quot;
-        distribution = {}
-        for node in self.ring.values():
-            distribution[node] = distribution.get(node, 0) + 1
-        return distribution
+    if nodes:
+        for node in nodes:
+            self.add_node(node)
 
+def _hash(self, key: str) -&gt; int:
+    &quot;&quot;&quot;计算 key 的哈希值（32 位）&quot;&quot;&quot;
+    return int(hashlib.md5(key.encode()).hexdigest(), 16) % (2 ** 32)
 
-# 使用示例
-if __name__ == &quot;__main__&quot;:
-    # 创建一致性哈希环
-    ch = ConsistentHash(nodes=[&quot;A&quot;, &quot;B&quot;, &quot;C&quot;], virtual_nodes=100)
+def add_node(self, node: str) -&gt; None:
+    &quot;&quot;&quot;添加节点（包括虚拟节点）&quot;&quot;&quot;
+    for i in range(self.virtual_nodes):
+        virtual_key = f&quot;{node}#{i}&quot;
+        hash_value = self._hash(virtual_key)
+        self.ring[hash_value] = node
+        bisect.insort(self.sorted_keys, hash_value)
+
+def remove_node(self, node: str) -&gt; None:
+    &quot;&quot;&quot;移除节点&quot;&quot;&quot;
+    for i in range(self.virtual_nodes):
+        virtual_key = f&quot;{node}#{i}&quot;
+        hash_value = self._hash(virtual_key)
+        if hash_value in self.ring:
+            del self.ring[hash_value]
+            self.sorted_keys.remove(hash_value)
+
+def get_node(self, key: str) -&gt; str:
+    &quot;&quot;&quot;获取 key 应该存储的节点&quot;&quot;&quot;
+    if not self.ring:
+        raise Exception(&quot;哈希环为空&quot;)
     
-    # 模拟数据存储
-    keys = [f&quot;data_{i}&quot; for i in range(1000)]
-    storage = {node: [] for node in [&quot;A&quot;, &quot;B&quot;, &quot;C&quot;]}
+    hash_value = self._hash(key)
+    idx = bisect.bisect(self.sorted_keys, hash_value)
+    if idx &gt;= len(self.sorted_keys):
+        idx = 0
     
-    for key in keys:
-        node = ch.get_node(key)
-        storage[node].append(key)
-    
-    # 输出分布情况
-    print(&quot;数据分布：&quot;)
-    for node, data_list in storage.items():
-        print(f&quot;  节点 {node}: {len(data_list)} 条数据 ({len(data_list)/len(keys)*100:.1f}%)&quot;)
-    
-    # 模拟节点扩容
-    print(&quot;\n添加节点 D...&quot;)
-    ch.add_node(&quot;D&quot;)
-    
-    # 重新计算分布
-    new_storage = {node: [] for node in [&quot;A&quot;, &quot;B&quot;, &quot;C&quot;, &quot;D&quot;]}
-    migrated_count = 0
-    
-    for key in keys:
-        node = ch.get_node(key)
-        new_storage[node].append(key)
-    
-    print(&quot;新数据分布：&quot;)
-    for node, data_list in new_storage.items():
-        print(f&quot;  节点 {node}: {len(data_list)} 条数据 ({len(data_list)/len(keys)*100:.1f}%)&quot;)
+    return self.ring[self.sorted_keys[idx]]
+
+def get_distribution(self) -&gt; Dict[str, int]:
+    &quot;&quot;&quot;获取当前数据分布统计&quot;&quot;&quot;
+    distribution = {}
+    for node in self.ring.values():
+        distribution[node] = distribution.get(node, 0) + 1
+    return distribution
 </code></pre>
+<h1>使用示例</h1>
+<p>if <strong>name</strong> == &quot;<strong>main</strong>&quot;:
+    ch = ConsistentHash(nodes=[&quot;A&quot;, &quot;B&quot;, &quot;C&quot;], virtual_nodes=100)</p>
+<pre><code>keys = [f&quot;data_{i}&quot; for i in range(1000)]
+storage = {node: [] for node in [&quot;A&quot;, &quot;B&quot;, &quot;C&quot;]}
+
+for key in keys:
+    node = ch.get_node(key)
+    storage[node].append(key)
+
+print(&quot;数据分布：&quot;)
+for node, data_list in storage.items():
+    print(f&quot;  节点 {node}: {len(data_list)} 条数据 ({len(data_list)/len(keys)*100:.1f}%)&quot;)&lt;/code&gt;&lt;/pre&gt;
+</code></pre>
+</div>
+
 <h3>输出结果</h3>
-<pre><code>数据分布：
-  节点 A: 335 条数据 (33.5%)
-  节点 B: 331 条数据 (33.1%)
-  节点 C: 334 条数据 (33.4%)
+<div class="output-block">
+  <div class="output-header">📊 运行结果</div>
+  <div class="output-content">
+    <div class="output-section">
+      <div class="output-title">初始分布</div>
+      <div class="output-line"><span class="output-node">节点 A</span>: 335 条数据 (33.5%)</div>
+      <div class="output-line"><span class="output-node">节点 B</span>: 331 条数据 (33.1%)</div>
+      <div class="output-line"><span class="output-node">节点 C</span>: 334 条数据 (33.4%)</div>
+    </div>
+    <div class="output-divider">↓ 添加节点 D 后 ↓</div>
+    <div class="output-section">
+      <div class="output-title">新分布</div>
+      <div class="output-line"><span class="output-node">节点 A</span>: 251 条数据 (25.1%)</div>
+      <div class="output-line"><span class="output-node">节点 B</span>: 248 条数据 (24.8%)</div>
+      <div class="output-line"><span class="output-node">节点 C</span>: 249 条数据 (24.9%)</div>
+      <div class="output-line"><span class="output-node new">节点 D</span>: 252 条数据 (25.2%)</div>
+    </div>
+    <div class="output-summary">
+      📉 数据迁移量：约 <strong>25%</strong>（仅受影响区域的数据）
+    </div>
+  </div>
+</div>
 
-添加节点 D...
-新数据分布：
-  节点 A: 251 条数据 (25.1%)
-  节点 B: 248 条数据 (24.8%)
-  节点 C: 249 条数据 (24.9%)
-  节点 D: 252 条数据 (25.2%)
-
-数据迁移量：约 25%（仅受影响区域的数据）
-</code></pre>
 <hr>
 <h2>应用场景</h2>
-<h3>1. 分布式缓存系统</h3>
-<pre><code>┌─────────────────────────────────────────────────────────┐
-│                    Redis Cluster                         │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│  Client → 一致性哈希 → Redis 节点集群                     │
-│                                                         │
-│  优势：                                                  │
-│  • 节点扩缩容时，缓存命中率保持高位                       │
-│  • 自动故障转移，数据自动迁移                            │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
-</code></pre>
-<p><strong>实际应用</strong>：</p>
-<ul>
-<li><strong>Redis Cluster</strong>：使用哈希槽（16384 个槽）</li>
-<li><strong>Memcached</strong>：客户端实现一致性哈希</li>
-<li><strong>Codis</strong>：Twitter 开源的 Redis 代理</li>
-</ul>
-<h3>2. 分布式数据库</h3>
-<pre><code>┌─────────────────────────────────────────────────────────┐
-│                   数据分片策略                            │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│  用户 ID → 一致性哈希 → 数据库分片                        │
-│                                                         │
-│  案例：                                                  │
-│  • Cassandra：使用一致性哈希进行数据分区                 │
-│  • DynamoDB：基于一致性哈希的键空间分区                  │
-│  • MongoDB：Sharding 支持一致性哈希策略                  │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
-</code></pre>
-<h3>3. 负载均衡</h3>
-<pre><code>┌─────────────────────────────────────────────────────────┐
-│                   负载均衡器                             │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│         请求 → 一致性哈希 → 后端服务器集群                │
-│                                                         │
-│  优势：                                                  │
-│  • Session 保持：同一用户的请求路由到同一服务器           │
-│  • 服务器扩缩容时，影响最小化                            │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
-</code></pre>
-<h3>4. P2P 网络</h3>
-<pre><code>┌─────────────────────────────────────────────────────────┐
-│                    P2P 网络拓扑                           │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│  Chord、Kademlia 等 DHT 协议都基于一致性哈希              │
-│                                                         │
-│  特点：                                                  │
-│  • 去中心化，节点自由加入/离开                           │
-│  • 数据定位效率高（O(log N)）                           │
-│  • 抗故障能力强                                         │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
-</code></pre>
+<div class="scenario-grid">
+  <div class="scenario-card">
+    <div class="scenario-icon">🗄️</div>
+    <h4>分布式缓存系统</h4>
+    <div class="scenario-content">
+      <div class="flow-diagram">
+        <span class="flow-item">Client</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item highlight">一致性哈希</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">Redis 集群</span>
+      </div>
+      <ul class="scenario-list">
+        <li><strong>Redis Cluster</strong>：使用哈希槽（16384 个槽）</li>
+        <li><strong>Memcached</strong>：客户端实现一致性哈希</li>
+        <li><strong>Codis</strong>：Twitter 开源的 Redis 代理</li>
+      </ul>
+    </div>
+  </div>
+  
+  <div class="scenario-card">
+    <div class="scenario-icon">🗃️</div>
+    <h4>分布式数据库</h4>
+    <div class="scenario-content">
+      <div class="flow-diagram">
+        <span class="flow-item">用户 ID</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item highlight">一致性哈希</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">数据库分片</span>
+      </div>
+      <ul class="scenario-list">
+        <li><strong>Cassandra</strong>：使用一致性哈希进行数据分区</li>
+        <li><strong>DynamoDB</strong>：基于一致性哈希的键空间分区</li>
+        <li><strong>MongoDB</strong>：Sharding 支持一致性哈希策略</li>
+      </ul>
+    </div>
+  </div>
+  
+  <div class="scenario-card">
+    <div class="scenario-icon">⚖️</div>
+    <h4>负载均衡</h4>
+    <div class="scenario-content">
+      <div class="flow-diagram">
+        <span class="flow-item">请求</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item highlight">一致性哈希</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">后端服务器</span>
+      </div>
+      <ul class="scenario-list">
+        <li><strong>Session 保持</strong>：同一用户路由到同一服务器</li>
+        <li><strong>弹性伸缩</strong>：服务器扩缩容时影响最小化</li>
+      </ul>
+    </div>
+  </div>
+  
+  <div class="scenario-card">
+    <div class="scenario-icon">🌐</div>
+    <h4>P2P 网络</h4>
+    <div class="scenario-content">
+      <div class="scenario-text">
+        Chord、Kademlia 等 DHT 协议都基于一致性哈希
+      </div>
+      <ul class="scenario-list">
+        <li><strong>去中心化</strong>：节点自由加入/离开</li>
+        <li><strong>高效定位</strong>：数据定位效率 O(log N)</li>
+        <li><strong>抗故障</strong>：节点故障不影响整体网络</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
 <hr>
 <h2>优缺点分析</h2>
-<h3>✅ 优点</h3>
-<table>
-<thead>
-<tr>
-<th>优点</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><strong>低迁移率</strong></td>
-<td>节点变化时，只影响部分数据（约 1/N）</td>
-</tr>
-<tr>
-<td><strong>高可用</strong></td>
-<td>节点故障自动转移，无需人工干预</td>
-</tr>
-<tr>
-<td><strong>易扩展</strong></td>
-<td>添加/删除节点简单，不影响整体服务</td>
-</tr>
-<tr>
-<td><strong>去中心化</strong></td>
-<td>无需中心协调节点，各节点独立</td>
-</tr>
-<tr>
-<td><strong>负载均衡</strong></td>
-<td>配合虚拟节点，数据分布均匀</td>
-</tr>
-</tbody></table>
-<h3>❌ 缺点</h3>
-<table>
-<thead>
-<tr>
-<th>缺点</th>
-<th>说明</th>
-<th>解决方案</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><strong>数据倾斜</strong></td>
-<td>节点少时分布不均</td>
-<td>使用虚拟节点</td>
-</tr>
-<tr>
-<td><strong>查询复杂度</strong></td>
-<td>需要 O(log N) 查找</td>
-<td>使用平衡树/跳表</td>
-</tr>
-<tr>
-<td><strong>实现复杂</strong></td>
-<td>比普通哈希复杂</td>
-<td>使用成熟库</td>
-</tr>
-<tr>
-<td><strong>热点数据</strong></td>
-<td>无法解决单点热点</td>
-<td>配合其他策略</td>
-</tr>
-</tbody></table>
+<div class="pros-cons-container">
+  <div class="pros-card">
+    <div class="card-title">
+      <span class="title-icon">✅</span>
+      <h4>优点</h4>
+    </div>
+    <div class="pros-list">
+      <div class="pro-item">
+        <span class="pro-icon">🔄</span>
+        <div>
+          <strong>低迁移率</strong>
+          <p>节点变化时，只影响部分数据（约 1/N）</p>
+        </div>
+      </div>
+      <div class="pro-item">
+        <span class="pro-icon">🛡️</span>
+        <div>
+          <strong>高可用</strong>
+          <p>节点故障自动转移，无需人工干预</p>
+        </div>
+      </div>
+      <div class="pro-item">
+        <span class="pro-icon">📈</span>
+        <div>
+          <strong>易扩展</strong>
+          <p>添加/删除节点简单，不影响整体服务</p>
+        </div>
+      </div>
+      <div class="pro-item">
+        <span class="pro-icon">🔗</span>
+        <div>
+          <strong>去中心化</strong>
+          <p>无需中心协调节点，各节点独立</p>
+        </div>
+      </div>
+      <div class="pro-item">
+        <span class="pro-icon">⚖️</span>
+        <div>
+          <strong>负载均衡</strong>
+          <p>配合虚拟节点，数据分布均匀</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="cons-card">
+    <div class="card-title">
+      <span class="title-icon">⚠️</span>
+      <h4>缺点 & 解决方案</h4>
+    </div>
+    <div class="cons-list">
+      <div class="con-item">
+        <div class="con-problem">
+          <strong>数据倾斜</strong>
+          <span>节点少时分布不均</span>
+        </div>
+        <div class="con-solution">
+          <span class="solution-label">解决</span>
+          使用虚拟节点
+        </div>
+      </div>
+      <div class="con-item">
+        <div class="con-problem">
+          <strong>查询复杂度</strong>
+          <span>需要 O(log N) 查找</span>
+        </div>
+        <div class="con-solution">
+          <span class="solution-label">解决</span>
+          使用平衡树/跳表
+        </div>
+      </div>
+      <div class="con-item">
+        <div class="con-problem">
+          <strong>实现复杂</strong>
+          <span>比普通哈希复杂</span>
+        </div>
+        <div class="con-solution">
+          <span class="solution-label">解决</span>
+          使用成熟库
+        </div>
+      </div>
+      <div class="con-item">
+        <div class="con-problem">
+          <strong>热点数据</strong>
+          <span>无法解决单点热点</span>
+        </div>
+        <div class="con-solution">
+          <span class="solution-label">解决</span>
+          配合其他策略
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <hr>
 <h2>总结</h2>
 <h3>核心要点</h3>
-<pre><code>┌─────────────────────────────────────────────────────────┐
-│                   一致性哈希要点                          │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│  1️⃣  哈希环：将哈希空间组织成环形结构                    │
-│  2️⃣  顺时针查找：数据映射到顺时针第一个节点              │
-│  3️⃣  虚拟节点：解决数据倾斜问题                         │
-│  4️⃣  低迁移率：节点变化只影响部分数据                    │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
-</code></pre>
+<div class="summary-box">
+  <div class="summary-item">
+    <span class="summary-number">1️⃣</span>
+    <div class="summary-content">
+      <strong>哈希环</strong>
+      <span>将哈希空间组织成环形结构</span>
+    </div>
+  </div>
+  <div class="summary-item">
+    <span class="summary-number">2️⃣</span>
+    <div class="summary-content">
+      <strong>顺时针查找</strong>
+      <span>数据映射到顺时针第一个节点</span>
+    </div>
+  </div>
+  <div class="summary-item">
+    <span class="summary-number">3️⃣</span>
+    <div class="summary-content">
+      <strong>虚拟节点</strong>
+      <span>解决数据倾斜问题</span>
+    </div>
+  </div>
+  <div class="summary-item">
+    <span class="summary-number">4️⃣</span>
+    <div class="summary-content">
+      <strong>低迁移率</strong>
+      <span>节点变化只影响部分数据</span>
+    </div>
+  </div>
+</div>
+
 <h3>何时使用一致性哈希</h3>
-<p><strong>适合场景</strong>：</p>
-<ul>
-<li>✅ 分布式缓存系统</li>
-<li>✅ 需要频繁扩缩容的集群</li>
-<li>✅ 对缓存命中率要求高的场景</li>
-<li>✅ P2P 网络和 DHT 系统</li>
-</ul>
-<p><strong>不适合场景</strong>：</p>
-<ul>
-<li>❌ 节点数量固定的小型系统</li>
-<li>❌ 需要严格数据一致性的场景</li>
-<li>❌ 数据量极小，单节点即可承载</li>
-</ul>
+<div class="usage-grid">
+  <div class="usage-card suitable">
+    <div class="usage-header">
+      <span class="usage-icon">✅</span>
+      <h4>适合场景</h4>
+    </div>
+    <ul class="usage-list">
+      <li>🗄️ 分布式缓存系统</li>
+      <li>📈 需要频繁扩缩容的集群</li>
+      <li>🎯 对缓存命中率要求高的场景</li>
+      <li>🌐 P2P 网络和 DHT 系统</li>
+    </ul>
+  </div>
+  
+  <div class="usage-card unsuitable">
+    <div class="usage-header">
+      <span class="usage-icon">❌</span>
+      <h4>不适合场景</h4>
+    </div>
+    <ul class="usage-list">
+      <li>🔒 节点数量固定的小型系统</li>
+      <li>📋 需要严格数据一致性的场景</li>
+      <li>💾 数据量极小，单节点即可承载</li>
+    </ul>
+  </div>
+</div>
+
 <h3>延伸阅读</h3>
-<ul>
-<li><a href="https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf">Chord: A Scalable Peer-to-peer Lookup Service</a></li>
-<li><a href="https://www.akamai.com/us/en/multimedia/papers/consistent-hashing.pdf">Consistent Hashing and Random Trees</a></li>
-<li><a href="https://redis.io/docs/management/scaling/">Redis Cluster 规范</a></li>
-</ul>
+<div class="reading-list">
+  <a href="https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf" class="reading-link" target="_blank">
+    <span class="link-icon">📄</span>
+    <span class="link-text">Chord: A Scalable Peer-to-peer Lookup Service</span>
+  </a>
+  <a href="https://www.akamai.com/us/en/multimedia/papers/consistent-hashing.pdf" class="reading-link" target="_blank">
+    <span class="link-icon">📄</span>
+    <span class="link-text">Consistent Hashing and Random Trees</span>
+  </a>
+  <a href="https://redis.io/docs/management/scaling/" class="reading-link" target="_blank">
+    <span class="link-icon">🔗</span>
+    <span class="link-text">Redis Cluster 规范</span>
+  </a>
+</div>
+
 <hr>
 <blockquote>
-<p><strong>作者注</strong>：一致性哈希是分布式系统设计的基石之一，理解其原理对于构建可扩展、高可用的系统至关重要。在实际应用中，建议优先使用成熟的库（如 Redis Cluster、Cassandra 等），而非自己实现。</p>
+<p><strong>💡 作者注</strong>：一致性哈希是分布式系统设计的基石之一，理解其原理对于构建可扩展、高可用的系统至关重要。在实际应用中，建议优先使用成熟的库（如 Redis Cluster、Cassandra 等），而非自己实现。</p>
 </blockquote>
 </div>
     </div>
