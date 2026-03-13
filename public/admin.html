@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>博客管理后台</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #ecf0f1;
+    }
+    .header {
+      background: #2c3e50;
+      color: white;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header a { color: #3498db; text-decoration: none; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+    .tab {
+      padding: 10px 20px;
+      background: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+    .tab.active { background: #3498db; color: white; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .card {
+      background: white;
+      padding: 25px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .form-group { margin-bottom: 20px; }
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+    .form-group input, .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    .form-group textarea { min-height: 400px; font-family: 'Courier New', monospace; }
+    .btn {
+      padding: 12px 25px;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-right: 10px;
+    }
+    .btn:hover { background: #2980b9; }
+    .btn-danger { background: #e74c3c; }
+    .btn-danger:hover { background: #c0392b; }
+    .btn-success { background: #27ae60; }
+    .btn-success:hover { background: #229954; }
+    .post-list { list-style: none; }
+    .post-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      border-bottom: 1px solid #eee;
+    }
+    .post-item:last-child { border-bottom: none; }
+    .post-item h3 { font-size: 16px; margin-bottom: 5px; }
+    .post-item p { color: #999; font-size: 13px; }
+    .post-actions { display: flex; gap: 10px; }
+    .message {
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .message.success { background: #d4edda; color: #155724; }
+    .message.error { background: #f8d7da; color: #721c24; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h2>博客管理后台</h2>
+    <a href="/" target="_blank">查看网站 →</a>
+  </div>
+  
+  <div class="container">
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('editor')">✏️ 编辑器</button>
+      <button class="tab" onclick="showTab('import')">📥 Markdown 导入</button>
+      <button class="tab" onclick="showTab('manage')">📋 管理文章</button>
+    </div>
+    
+    <div id="message" class="message"></div>
+    
+    <!-- 编辑器面板 -->
+    <div id="editor" class="panel active">
+      <div class="card">
+        <div class="form-group">
+          <label>文章标题</label>
+          <input type="text" id="post-title" placeholder="输入文章标题">
+        </div>
+        <div class="form-group">
+          <label>URL 别名（可选，留空自动生成）</label>
+          <input type="text" id="post-slug" placeholder="my-article">
+        </div>
+        <div class="form-group">
+          <label>Markdown 内容</label>
+          <textarea id="post-content" placeholder="# 文章标题&#10;&#10;开始写作..."></textarea>
+        </div>
+        <button class="btn btn-success" onclick="savePost()">💾 保存文章</button>
+        <button class="btn" onclick="clearForm()">🗑️ 清空</button>
+      </div>
+    </div>
+    
+    <!-- Markdown 导入面板 -->
+    <div id="import" class="panel">
+      <div class="card">
+        <div class="form-group">
+          <label>文章标题（可选）</label>
+          <input type="text" id="import-title" placeholder="导入的文章">
+        </div>
+        <div class="form-group">
+          <label>Markdown 内容</label>
+          <textarea id="import-content" placeholder="粘贴 Markdown 内容..."></textarea>
+        </div>
+        <button class="btn btn-success" onclick="importMarkdown()">📥 导入</button>
+      </div>
+    </div>
+    
+    <!-- 管理面板 -->
+    <div id="manage" class="panel">
+      <div class="card">
+        <h3 style="margin-bottom:15px;">所有文章</h3>
+        <ul class="post-list" id="admin-post-list"></ul>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    function showTab(tabId) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      document.querySelector(`[onclick="showTab('${tabId}')"]`).classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+      if (tabId === 'manage') loadPosts();
+    }
+    
+    function showMessage(text, type) {
+      const msg = document.getElementById('message');
+      msg.textContent = text;
+      msg.className = `message ${type}`;
+      msg.style.display = 'block';
+      setTimeout(() => msg.style.display = 'none', 3000);
+    }
+    
+    async function savePost() {
+      const title = document.getElementById('post-title').value;
+      const slug = document.getElementById('post-slug').value;
+      const content = document.getElementById('post-content').value;
+      
+      if (!content) {
+        showMessage('请输入文章内容', 'error');
+        return;
+      }
+      
+      try {
+        const res = await fetch('/api/posts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, slug, content })
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+          showMessage(`文章已保存！Slug: ${data.slug}`, 'success');
+          clearForm();
+        } else {
+          showMessage(data.error, 'error');
+        }
+      } catch (err) {
+        showMessage('保存失败', 'error');
+      }
+    }
+    
+    async function importMarkdown() {
+      const title = document.getElementById('import-title').value;
+      const content = document.getElementById('import-content').value;
+      
+      if (!content) {
+        showMessage('请输入 Markdown 内容', 'error');
+        return;
+      }
+      
+      try {
+        const res = await fetch('/api/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, markdown: content })
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+          showMessage(`导入成功！Slug: ${data.slug}`, 'success');
+          document.getElementById('import-content').value = '';
+          document.getElementById('import-title').value = '';
+        } else {
+          showMessage(data.error, 'error');
+        }
+      } catch (err) {
+        showMessage('导入失败', 'error');
+      }
+    }
+    
+    async function loadPosts() {
+      try {
+        const res = await fetch('/api/posts');
+        const posts = await res.json();
+        
+        const list = document.getElementById('admin-post-list');
+        if (posts.length === 0) {
+          list.innerHTML = '<li style="padding:15px;color:#999;">暂无文章</li>';
+          return;
+        }
+        
+        list.innerHTML = posts.map(post => `
+          <li class="post-item">
+            <div>
+              <h3>${post.title}</h3>
+              <p>${new Date(post.date).toLocaleString('zh-CN')} · Slug: ${post.slug}</p>
+            </div>
+            <div class="post-actions">
+              <button class="btn" onclick="editPost('${post.slug}')">编辑</button>
+              <button class="btn btn-danger" onclick="deletePost('${post.slug}')">删除</button>
+            </div>
+          </li>
+        `).join('');
+      } catch (err) {
+        document.getElementById('admin-post-list').innerHTML = '<li style="color:red;">加载失败</li>';
+      }
+    }
+    
+    async function editPost(slug) {
+      try {
+        const res = await fetch(`/api/posts/${slug}`);
+        const post = await res.json();
+        
+        showTab('editor');
+        document.getElementById('post-title').value = post.content.match(/^#\s+(.+)$/m)?.[1] || '';
+        document.getElementById('post-slug').value = slug;
+        document.getElementById('post-content').value = post.content.replace(/^#\s+.+$/m, '').trim();
+      } catch (err) {
+        showMessage('加载文章失败', 'error');
+      }
+    }
+    
+    async function deletePost(slug) {
+      if (!confirm('确定要删除这篇文章吗？')) return;
+      
+      try {
+        const res = await fetch(`/api/posts/${slug}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          showMessage('文章已删除', 'success');
+          loadPosts();
+        }
+      } catch (err) {
+        showMessage('删除失败', 'error');
+      }
+    }
+    
+    function clearForm() {
+      document.getElementById('post-title').value = '';
+      document.getElementById('post-slug').value = '';
+      document.getElementById('post-content').value = '';
+    }
+  </script>
+</body>
+</html>
