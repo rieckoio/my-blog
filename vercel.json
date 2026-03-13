@@ -1,20 +1,25 @@
 {
   "version": 2,
   "builds": [
-    { "src": "package.json", "use": "@vercel/node" }
+    { "src": "api/index.js", "use": "@vercel/node" },
+    { "src": "public/**", "use": "@vercel/static" }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/server.js"
+      "dest": "/api/index.js"
     },
     {
-      "src": "/post/(.*)",
+      "src": "/post/([^/]+)",
       "dest": "/public/post.html"
     },
     {
       "src": "/admin",
       "dest": "/public/admin.html"
+    },
+    {
+      "src": "/(.+\\.(html|css|js|png|jpg|ico|json))",
+      "dest": "/public/$1"
     },
     {
       "src": "/(.*)",
