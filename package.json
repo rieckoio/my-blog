@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "build": "echo 'Build complete'"
+    "build": "node build.js",
+    "deploy": "npm run build && echo 'Ready for GitHub Pages'"
   },
   "dependencies": {
     "express": "^4.18.2",

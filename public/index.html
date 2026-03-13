@@ -20,7 +20,7 @@
       text-align: center;
     }
     header h1 { margin-bottom: 10px; }
-    header a { color: #3498db; text-decoration: none; }
+    header p { opacity: 0.9; }
     .post-list { margin-top: 30px; }
     .post-card {
       background: white;
@@ -36,70 +36,48 @@
     .post-card h2 a:hover { color: #3498db; }
     .post-date { color: #999; font-size: 0.9em; margin-bottom: 15px; }
     .post-excerpt { color: #666; }
-    .admin-link {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: #3498db;
-      color: white;
-      padding: 15px 25px;
-      border-radius: 50px;
+    footer { text-align: center; padding: 30px; color: #999; margin-top: 40px; }
+    .read-more {
+      display: inline-block;
+      margin-top: 15px;
+      color: #3498db;
       text-decoration: none;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
-    .admin-link:hover { background: #2980b9; }
-    footer { text-align: center; padding: 30px; color: #999; }
+    .read-more:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
   <header>
-    <h1 id="site-title">加载中...</h1>
-    <p id="site-description"></p>
+    <h1>我的博客</h1>
+    <p>一个简洁的博客网站</p>
   </header>
   
   <div class="container">
-    <div class="post-list" id="post-list"></div>
+    <div class="post-list">
+      
+        <div class="post-card">
+          <h2><a href="/welcome.html">欢迎来到我的博客</a></h2>
+          <div class="post-date">2026年3月13日</div>
+          <div class="post-excerpt"><!-- date: 2026-03-13T11:05:00.000Z -->
+# 欢迎来到我的博客
+
+你好！这是自动生成的第一篇文章，标志着你的博客已经成功搭建完成。
+
+## 🎉 博客功能
+
+你的新博客支持以下功能：
+
+- ✅ **文章编辑** - 在管理后台使用 Markdown 编辑器创作
+- ✅ **保存与更新** - 自动保存，随时修改
+- ✅ **Markdown 导入** - 支持...</div>
+          <a href="/welcome.html" class="read-more">阅读全文 →</a>
+        </div>
+      
+    </div>
   </div>
   
-  <a href="/admin" class="admin-link">管理后台</a>
-  
   <footer>
-    <p>Powered by My Blog</p>
+    <p>© 2026 博主. Powered by Static Blog.</p>
   </footer>
-  
-  <script>
-    async function loadPosts() {
-      try {
-        const [configRes, postsRes] = await Promise.all([
-          fetch('/api/config'),
-          fetch('/api/posts')
-        ]);
-        
-        const config = await configRes.json();
-        const posts = await postsRes.json();
-        
-        document.getElementById('site-title').textContent = config.siteTitle;
-        document.getElementById('site-description').textContent = config.siteDescription;
-        
-        const postList = document.getElementById('post-list');
-        if (posts.length === 0) {
-          postList.innerHTML = '<p style="text-align:center;color:#999;">暂无文章</p>';
-          return;
-        }
-        
-        postList.innerHTML = posts.map(post => `
-          <div class="post-card">
-            <h2><a href="/post/${post.slug}">${post.title}</a></h2>
-            <div class="post-date">${new Date(post.date).toLocaleDateString('zh-CN')}</div>
-            <div class="post-excerpt">${post.excerpt}</div>
-          </div>
-        `).join('');
-      } catch (err) {
-        document.getElementById('post-list').innerHTML = '<p style="color:red;">加载失败</p>';
-      }
-    }
-    
-    loadPosts();
-  </script>
 </body>
 </html>
