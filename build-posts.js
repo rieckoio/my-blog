@@ -5,15 +5,21 @@ const path = require('path');
 
 // 简单的 Markdown 转 HTML 函数
 function markdownToHtml(md) {
-  let html = md;
-  
-  // 代码块
-  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
-    return `<pre><code class="language-${lang}">${code.trim()}</code></pre>`;
+  // 先提取代码块，用占位符保护
+  const codeBlocks = [];
+  let html = md.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
+    const index = codeBlocks.length;
+    codeBlocks.push({ lang, code: code.trim() });
+    return `\u0000CODEBLOCK${index}\u0000`;
   });
   
-  // 行内代码
-  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  // 提取行内代码
+  const inlineCodes = [];
+  html = html.replace(/`([^`]+)`/g, (match, code) => {
+    const index = inlineCodes.length;
+    inlineCodes.push(code);
+    return `\u0000INLINECODE${index}\u0000`;
+  });
   
   // 标题
   html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
@@ -29,8 +35,11 @@ function markdownToHtml(md) {
   // 斜体
   html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
   
-  // 链接
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+  // 链接（将 .md 链接转为 .html）
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
+    const fixedUrl = url.replace(/\.md$/, '.html');
+    return `<a href="${fixedUrl}">${text}</a>`;
+  });
   
   // 图片
   html = html.replace(/!\[([^\]]+)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">');
@@ -38,25 +47,84 @@ function markdownToHtml(md) {
   // 列表项
   html = html.replace(/^\s*[-*+]\s+(.*$)/gim, '<li>$1</li>');
   
-  // 表格（简化处理）
-  html = html.replace(/^\|(.+)\|$/gim, '<tr>$1</tr>');
-  html = html.replace(/^\|?\s*:?-+:?\s*\|/gim, '');
+  // 表格处理 - 在段落处理之前完成
+  const tableLines = html.split('\n');
+  const processedTableLines = [];
+  let inTable = false;
+  let tableBuffer = [];
   
-  // 段落
-  html = html.replace(/\n\n/g, '</p><p>');
-  html = html.replace(/^/g, '<p>');
-  html = html.replace(/$/g, '</p>');
+  for (let i = 0; i < tableLines.length; i++) {
+    const line = tableLines[i];
+    const isTableRow = /^\|(.+)\|$/.test(line.trim());
+    const isSeparator = /^\|?\s*:?-+:?\s*\|/.test(line.trim());
+    
+    if (isTableRow && !inTable) {
+      inTable = true;
+      tableBuffer = ['<table>'];
+      // 处理表头
+      const cells = line.trim().replace(/^\|(.+)\|$/, '$1').split('|');
+      const headerRow = cells.map(cell => `<th>${cell.trim()}</th>`).join('');
+      tableBuffer.push(`<tr>${headerRow}</tr>`);
+    } else if (isSeparator) {
+      // 跳过分隔线
+      continue;
+    } else if (isTableRow && inTable) {
+      // 处理数据行
+      const cells = line.trim().replace(/^\|(.+)\|$/, '$1').split('|');
+      const dataRow = cells.map(cell => `<td>${cell.trim()}</td>`).join('');
+      tableBuffer.push(`<tr>${dataRow}</tr>`);
+    } else {
+      if (inTable) {
+        tableBuffer.push('</table>');
+        processedTableLines.push(tableBuffer.join('\n'));
+        inTable = false;
+        tableBuffer = [];
+      }
+      processedTableLines.push(line);
+    }
+  }
+  
+  if (inTable) {
+    tableBuffer.push('</table>');
+    processedTableLines.push(tableBuffer.join('\n'));
+  }
+  
+  html = processedTableLines.join('\n');
+  
+  // 段落处理 - 按双换行分割
+  const paragraphs = html.split(/\n\n+/);
+  const processedParagraphs = paragraphs.map(p => {
+    const trimmed = p.trim();
+    // 如果已经是 HTML 块级元素，不包裹<p>
+    if (trimmed.startsWith('<h1>') || trimmed.startsWith('<h2>') || trimmed.startsWith('<h3>') ||
+        trimmed.startsWith('<table>') || trimmed.startsWith('<pre>') || trimmed.startsWith('\u0000CODEBLOCK') ||
+        trimmed.startsWith('<ul>') || trimmed.startsWith('<ol>') || trimmed.startsWith('<blockquote>')) {
+      return trimmed;
+    }
+    // 空段落跳过
+    if (!trimmed) return '';
+    // 包裹<p>
+    return `<p>${trimmed}</p>`;
+  });
+  
+  html = processedParagraphs.join('\n');
   
   // 清理多余的空段落
   html = html.replace(/<p>\s*<\/p>/g, '');
-  html = html.replace(/<p>(<h[1-6]>)/g, '$1');
-  html = html.replace(/(<\/h[1-6]>)<\/p>/g, '$1');
-  html = html.replace(/<p>(<pre>)/g, '$1');
-  html = html.replace(/(<\/pre>)<\/p>/g, '$1');
-  html = html.replace(/<p>(<ul>)/g, '$1');
-  html = html.replace(/(<\/ul>)<\/p>/g, '$1');
-  html = html.replace(/<p>(<table>)/g, '$1');
-  html = html.replace(/(<\/table>)<\/p>/g, '$1');
+  
+  // 恢复代码块
+  codeBlocks.forEach((block, index) => {
+    const placeholder = `\u0000CODEBLOCK${index}\u0000`;
+    const replacement = `<pre><code class="language-${block.lang}">${block.code}</code></pre>`;
+    html = html.replace(new RegExp(placeholder, 'g'), replacement);
+  });
+  
+  // 恢复行内代码
+  inlineCodes.forEach((code, index) => {
+    const placeholder = `\u0000INLINECODE${index}\u0000`;
+    const replacement = `<code>${code}</code>`;
+    html = html.replace(new RegExp(placeholder, 'g'), replacement);
+  });
   
   return html;
 }

@@ -140,49 +140,85 @@
         <span>📅 2026 年 3 月 17 日</span>
       </div>
       
-      <h1>ES 入门：核心概念与架构</h1><p><blockquote><strong>系列</strong>: Elasticsearch 系列第 1 篇  </blockquote>
+      <h1>ES 入门：核心概念与架构</h1>
+<blockquote><strong>系列</strong>: Elasticsearch 系列第 1 篇  </blockquote>
 <blockquote><strong>难度</strong>: ⭐⭐ 入门  </blockquote>
 <blockquote><strong>阅读时间</strong>: 约 20 分钟  </blockquote>
-<blockquote><strong>上一篇</strong>: 无 | <strong>下一篇</strong>: <a href="es-02-mapping.md">索引设计与映射详解</a></blockquote></p><p>---</p><h2>引言</h2><p>在数据爆炸的时代，如何快速从海量数据中找到有价值的信息，是每个系统必须面对的挑战。传统的数据库模糊查询（<code>LIKE '%keyword%'</code>）不仅性能差，而且无法实现智能搜索。</p><p><strong>Elasticsearch</strong>（简称 ES）是一个基于 Lucene 的分布式搜索和分析引擎，能够：
+<blockquote><strong>上一篇</strong>: 无 | <strong>下一篇</strong>: <a href="es-02-mapping.html">索引设计与映射详解</a></blockquote>
+<p>---</p>
+<h2>引言</h2>
+<p>在数据爆炸的时代，如何快速从海量数据中找到有价值的信息，是每个系统必须面对的挑战。传统的数据库模糊查询（<code>LIKE '%keyword%'</code>）不仅性能差，而且无法实现智能搜索。</p>
+<p><strong>Elasticsearch</strong>（简称 ES）是一个基于 Lucene 的分布式搜索和分析引擎，能够：
 <li>毫秒级搜索亿级数据</li>
 <li>支持全文检索、模糊匹配、聚合分析</li>
-<li>水平扩展，轻松应对数据增长</li></p><p>从 GitHub 的代码搜索，到电商的商品检索，再到日志分析（ELK Stack），ES 已成为现代架构的标配组件。</p><p>本文将带你全面了解 ES 的核心概念和架构设计，为后续深入学习打下坚实基础。</p><p>---</p><h2>一、什么是 Elasticsearch？</h2><h3>1.1 核心定义</h3><p>Elasticsearch 是一个<strong>分布式、RESTful 风格的搜索和数据分析引擎</strong>。</p><p><strong>关键特点</strong>:
+<li>水平扩展，轻松应对数据增长</li></p>
+<p>从 GitHub 的代码搜索，到电商的商品检索，再到日志分析（ELK Stack），ES 已成为现代架构的标配组件。</p>
+<p>本文将带你全面了解 ES 的核心概念和架构设计，为后续深入学习打下坚实基础。</p>
+<p>---</p>
+<h2>一、什么是 Elasticsearch？</h2>
+<h3>1.1 核心定义</h3>
+<p>Elasticsearch 是一个<strong>分布式、RESTful 风格的搜索和数据分析引擎</strong>。</p>
+<p><strong>关键特点</strong>:
 <li>🚀 <strong>快速</strong>: 近实时搜索（写入后 1 秒可搜索）</li>
 <li>🔍 <strong>强大</strong>: 全文检索、结构化搜索、分析聚合</li>
 <li>📈 <strong>可扩展</strong>: 分布式架构，轻松水平扩展</li>
 <li>🛠️ <strong>易用</strong>: RESTful API，多种语言客户端</li>
-<li>📊 <strong>可视化</strong>: 配合 Kibana 实现数据可视化</li></p><h3>1.2 典型应用场景</h3><p><tr> 场景 | 说明 | 案例 </tr>
-<tr>------|------|------</tr>
-<tr> <strong>全文搜索</strong> | 商品、文章、代码搜索 | 淘宝商品搜索、GitHub 代码搜索 </tr>
-<tr> <strong>日志分析</strong> | 收集、分析系统日志 | ELK Stack（Elasticsearch + Logstash + Kibana） </tr>
-<tr> <strong>指标监控</strong> | 存储和查询时间序列数据 | 应用性能监控、业务指标分析 </tr>
-<tr> <strong>自动补全</strong> | 搜索建议、拼写纠错 | 搜索框自动补全 </tr>
-<tr> <strong>数据分析</strong> | 实时聚合分析 | 用户行为分析、销售数据统计 </tr></p><h3>1.3 ES vs MySQL</h3><p><tr> 特性 | Elasticsearch | MySQL </tr>
-<tr>------|--------------|-------</tr>
-<tr> <strong>数据模型</strong> | JSON 文档 | 关系表 </tr>
-<tr> <strong>查询方式</strong> | DSL（领域特定语言） | SQL </tr>
-<tr> <strong>擅长场景</strong> | 全文检索、聚合分析 | 事务、关联查询 </tr>
-<tr> <strong>扩展方式</strong> | 天然分布式 | 需要分库分表 </tr>
-<tr> <strong>实时性</strong> | 近实时（1 秒延迟） | 实时 </tr></p><p><strong>结论</strong>: ES 和 MySQL 不是替代关系，而是互补关系。通常配合使用：MySQL 存储业务数据，ES 提供搜索能力。</p><p>---</p><h2>二、核心概念</h2><h3>2.1 概念对比</h3><p>理解 ES 的最好方式是类比关系型数据库：</p><p><tr> 关系型数据库 | Elasticsearch | 说明 </tr>
-<tr>-------------|---------------|------</tr>
-<tr> 数据库（Database） | 索引（Index） | 数据的逻辑分区 </tr>
-<tr> 表（Table） | 类型（Type - 7.x 已废弃） | ES 7.x+ 一个索引只有一种类型 </tr>
-<tr> 行（Row） | 文档（Document） | 基本数据单元 </tr>
-<tr> 列（Column） | 字段（Field） | 数据的属性 </tr>
-<tr> 模式（Schema） | 映射（Mapping） | 定义字段类型 </tr></p><h3>2.2 索引（Index）</h3><p><strong>索引</strong>是 ES 存储数据的地方，类似数据库中的"数据库"概念。</p><pre><code class="language-bash"># 创建索引
+<li>📊 <strong>可视化</strong>: 配合 Kibana 实现数据可视化</li></p>
+<h3>1.2 典型应用场景</h3>
+<table>
+<tr><th>场景</th><th>说明</th><th>案例</th></tr>
+<tr><td><strong>全文搜索</strong></td><td>商品、文章、代码搜索</td><td>淘宝商品搜索、GitHub 代码搜索</td></tr>
+<tr><td><strong>日志分析</strong></td><td>收集、分析系统日志</td><td>ELK Stack（Elasticsearch + Logstash + Kibana）</td></tr>
+<tr><td><strong>指标监控</strong></td><td>存储和查询时间序列数据</td><td>应用性能监控、业务指标分析</td></tr>
+<tr><td><strong>自动补全</strong></td><td>搜索建议、拼写纠错</td><td>搜索框自动补全</td></tr>
+<tr><td><strong>数据分析</strong></td><td>实时聚合分析</td><td>用户行为分析、销售数据统计</td></tr>
+</table>
+<h3>1.3 ES vs MySQL</h3>
+<table>
+<tr><th>特性</th><th>Elasticsearch</th><th>MySQL</th></tr>
+<tr><td><strong>数据模型</strong></td><td>JSON 文档</td><td>关系表</td></tr>
+<tr><td><strong>查询方式</strong></td><td>DSL（领域特定语言）</td><td>SQL</td></tr>
+<tr><td><strong>擅长场景</strong></td><td>全文检索、聚合分析</td><td>事务、关联查询</td></tr>
+<tr><td><strong>扩展方式</strong></td><td>天然分布式</td><td>需要分库分表</td></tr>
+<tr><td><strong>实时性</strong></td><td>近实时（1 秒延迟）</td><td>实时</td></tr>
+</table>
+<p><strong>结论</strong>: ES 和 MySQL 不是替代关系，而是互补关系。通常配合使用：MySQL 存储业务数据，ES 提供搜索能力。</p>
+<p>---</p>
+<h2>二、核心概念</h2>
+<h3>2.1 概念对比</h3>
+<p>理解 ES 的最好方式是类比关系型数据库：</p>
+<table>
+<tr><th>关系型数据库</th><th>Elasticsearch</th><th>说明</th></tr>
+<tr><td>数据库（Database）</td><td>索引（Index）</td><td>数据的逻辑分区</td></tr>
+<tr><td>表（Table）</td><td>类型（Type - 7.x 已废弃）</td><td>ES 7.x+ 一个索引只有一种类型</td></tr>
+<tr><td>行（Row）</td><td>文档（Document）</td><td>基本数据单元</td></tr>
+<tr><td>列（Column）</td><td>字段（Field）</td><td>数据的属性</td></tr>
+<tr><td>模式（Schema）</td><td>映射（Mapping）</td><td>定义字段类型</td></tr>
+</table>
+<h3>2.2 索引（Index）</h3>
+<p><strong>索引</strong>是 ES 存储数据的地方，类似数据库中的"数据库"概念。</p>
+<pre><code class="language-bash"># 创建索引
 PUT /products
 {
   "settings": {
     "number_of_shards": 3,
     "number_of_replicas": 1
   }
-}</p><h1>查看索引</h1>
-GET /products</p><h1>删除索引</h1>
-DELETE /products</code></pre><p><strong>索引命名规范</strong>:
+}
+
+# 查看索引
+GET /products
+
+# 删除索引
+DELETE /products</code></pre>
+<p><strong>索引命名规范</strong>:
 <li>✅ 小写字母</li>
 <li>✅ 不能以 <code>-</code>、<code>_</code>、<code>+</code> 开头</li>
-<li>✅ 不能包含 <code>,</code>、<code><em></code>、<code>?</code>、<code>"</code>、<code><</code>、<code>></code>、<code>|</code>、<code> </code>（空格）</li>
-<li>✅ 推荐格式：<code>业务名-类型-日期</code>，如 <code>logs-app-2026.03.17</code></li></p><h3>2.3 文档（Document）</h3><p><strong>文档</strong>是 ES 中最小的数据单元，必须是 JSON 格式。</p><pre><code class="language-bash"># 创建文档（自动分配 ID）
+<li>✅ 不能包含 <code>,</code>、<code>*</code>、<code>?</code>、<code>"</code>、<code><</code>、<code>></code>、<code>|</code>、<code> </code>（空格）</li>
+<li>✅ 推荐格式：<code>业务名-类型-日期</code>，如 <code>logs-app-2026.03.17</code></li></p>
+<h3>2.3 文档（Document）</h3>
+<p><strong>文档</strong>是 ES 中最小的数据单元，必须是 JSON 格式。</p>
+<pre><code class="language-bash"># 创建文档（自动分配 ID）
 POST /products/_doc
 {
   "name": "iPhone 15 Pro",
@@ -190,26 +226,40 @@ POST /products/_doc
   "category": "手机",
   "tags": ["苹果", "5G", "A17"],
   "created_at": "2026-03-17"
-}</p><h1>创建文档（指定 ID）</h1>
+}
+
+# 创建文档（指定 ID）
 PUT /products/_doc/1001
 {
   "name": "MacBook Pro",
   "price": 12999,
   "category": "电脑"
-}</p><h1>获取文档</h1>
-GET /products/_doc/1001</p><h1>更新文档</h1>
+}
+
+# 获取文档
+GET /products/_doc/1001
+
+# 更新文档
 POST /products/_doc/1001/_update
 {
   "doc": {
     "price": 11999
   }
-}</p><h1>删除文档</h1>
-DELETE /products/_doc/1001</code></pre><p><strong>文档元数据</strong>:
+}
+
+# 删除文档
+DELETE /products/_doc/1001</code></pre>
+<p><strong>文档元数据</strong>:
 <li><code>_index</code>: 所属索引</li>
 <li><code>_id</code>: 文档唯一标识</li>
 <li><code>_source</code>: 原始 JSON 数据</li>
-<li><code>_version</code>: 版本号（乐观锁）</li></p><h3>2.4 映射（Mapping）</h3><p><strong>映射</strong>定义文档中字段的类型和属性，类似数据库的 Schema。</p><pre><code class="language-bash"># 查看映射
-GET /products/_mapping</p><h1>创建索引时定义映射</h1>
+<li><code>_version</code>: 版本号（乐观锁）</li></p>
+<h3>2.4 映射（Mapping）</h3>
+<p><strong>映射</strong>定义文档中字段的类型和属性，类似数据库的 Schema。</p>
+<pre><code class="language-bash"># 查看映射
+GET /products/_mapping
+
+# 创建索引时定义映射
 PUT /products
 {
   "mappings": {
@@ -232,35 +282,49 @@ PUT /products
       }
     }
   }
-}</code></pre><p><strong>常用字段类型</strong>:</p><p><tr> 类型 | 说明 | 适用场景 </tr>
-<tr>------|------|----------</tr>
-<tr> <code>text</code> | 分词文本 | 全文搜索（标题、内容） </tr>
-<tr> <code>keyword</code> | 不分词 | 精确匹配（分类、标签） </tr>
-<tr> <code>integer/long</code> | 整数 | 价格、数量 </tr>
-<tr> <code>float/double</code> | 浮点数 | 价格、评分 </tr>
-<tr> <code>date</code> | 日期 | 创建时间、更新时间 </tr>
-<tr> <code>boolean</code> | 布尔值 | 是否上架 </tr>
-<tr> <code>object</code> | 对象 | 嵌套结构 </tr>
-<tr> <code>nested</code> | 嵌套对象 | 数组对象搜索 </tr></p><h3>2.5 分词器（Analyzer）</h3><p><strong>分词器</strong>将文本拆分成单词（Term），是全文搜索的核心。</p><pre><code class="language-bash"># 测试分词效果
+}</code></pre>
+<p><strong>常用字段类型</strong>:</p>
+<table>
+<tr><th>类型</th><th>说明</th><th>适用场景</th></tr>
+<tr><td><code>text</code></td><td>分词文本</td><td>全文搜索（标题、内容）</td></tr>
+<tr><td><code>keyword</code></td><td>不分词</td><td>精确匹配（分类、标签）</td></tr>
+<tr><td><code>integer/long</code></td><td>整数</td><td>价格、数量</td></tr>
+<tr><td><code>float/double</code></td><td>浮点数</td><td>价格、评分</td></tr>
+<tr><td><code>date</code></td><td>日期</td><td>创建时间、更新时间</td></tr>
+<tr><td><code>boolean</code></td><td>布尔值</td><td>是否上架</td></tr>
+<tr><td><code>object</code></td><td>对象</td><td>嵌套结构</td></tr>
+<tr><td><code>nested</code></td><td>嵌套对象</td><td>数组对象搜索</td></tr>
+</table>
+<h3>2.5 分词器（Analyzer）</h3>
+<p><strong>分词器</strong>将文本拆分成单词（Term），是全文搜索的核心。</p>
+<pre><code class="language-bash"># 测试分词效果
 POST /_analyze
 {
   "analyzer": "standard",
   "text": "Elasticsearch is powerful"
-}</p><h1>输出</h1>
+}
+
+# 输出
 {
   "tokens": [
     { "token": "elasticsearch" },
     { "token": "is" },
     { "token": "powerful" }
   ]
-}</code></pre><p><strong>内置分词器</strong>:
+}</code></pre>
+<p><strong>内置分词器</strong>:
 <li><code>standard</code>: 默认分词器（英文友好）</li>
 <li><code>simple</code>: 按非字母分割</li>
 <li><code>whitespace</code>: 按空格分割</li>
 <li><code>ik_max_word</code>: 中文分词（最细粒度）</li>
-<li><code>ik_smart</code>: 中文分词（最少切分）</li></p><p><strong>中文分词</strong>需要安装 IK 插件：
+<li><code>ik_smart</code>: 中文分词（最少切分）</li></p>
+<p><strong>中文分词</strong>需要安装 IK 插件：
 <pre><code class="language-bash"># 安装 IK 分词器
-./bin/elasticsearch-plugin install https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v8.x.x/elasticsearch-analysis-ik-8.x.x.zip</code></pre><p>---</p><h2>三、架构设计</h2><h3>3.1 整体架构</h3><pre><code class="language-">┌─────────────────────────────────────────────────────────┐
+./bin/elasticsearch-plugin install https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v8.x.x/elasticsearch-analysis-ik-8.x.x.zip</code></pre></p>
+<p>---</p>
+<h2>三、架构设计</h2>
+<h3>3.1 整体架构</h3>
+<pre><code class="language-">┌─────────────────────────────────────────────────────────┐
 │                      客户端                              │
 │            (REST API / Java / Python / ...)             │
 └─────────────────────────────────────────────────────────┘
@@ -283,21 +347,31 @@ POST /_analyze
     │ │分片 B│ │   │ │分片 C│ │   │ │分片 A│ │
     │ │副本  │ │   │ │副本  │ │   │ │副本  │ │
     │ └──────┘ │   │ └──────┘ │   │ └──────┘ │
-    └──────────┘   └──────────┘   └──────────┘</code></pre><h3>3.2 节点（Node）</h3><p><strong>节点</strong>是 ES 集群中的一个服务器，可以存储数据并参与集群操作。</p><p><strong>节点类型</strong>:
+    └──────────┘   └──────────┘   └──────────┘</code></pre>
+<h3>3.2 节点（Node）</h3>
+<p><strong>节点</strong>是 ES 集群中的一个服务器，可以存储数据并参与集群操作。</p>
+<p><strong>节点类型</strong>:
 <li><strong>主节点（Master）</strong>: 管理集群状态（创建/删除索引、节点加入/离开）</li>
 <li><strong>数据节点（Data）</strong>: 存储数据，执行 CRUD、搜索、聚合</li>
 <li><strong>协调节点（Coordinator）</strong>: 路由请求，聚合结果</li>
-<li><strong> ingest 节点</strong>: 预处理数据（类似 Logstash）</li></p><p><strong>生产环境建议</strong>:
+<li><strong> ingest 节点</strong>: 预处理数据（类似 Logstash）</li></p>
+<p><strong>生产环境建议</strong>:
 <li>主节点和数据节点分离</li>
 <li>至少 3 个主节点（防止脑裂）</li>
-<li>数据节点根据数据量水平扩展</li></p><h3>3.3 分片（Shard）</h3><p><strong>分片</strong>是 ES 数据分布的核心机制。</p><p><strong>为什么需要分片？</strong>
+<li>数据节点根据数据量水平扩展</li></p>
+<h3>3.3 分片（Shard）</h3>
+<p><strong>分片</strong>是 ES 数据分布的核心机制。</p>
+<p><strong>为什么需要分片？</strong>
 1. <strong>水平扩展</strong>: 数据分布到多个节点
 2. <strong>并行处理</strong>: 搜索操作并行执行
-3. <strong>突破限制</strong>: 单节点资源有限</p><p><strong>分片类型</strong>:
+3. <strong>突破限制</strong>: 单节点资源有限</p>
+<p><strong>分片类型</strong>:
 <li><strong>主分片（Primary Shard）</strong>: 存储原始数据，创建索引时确定（不可修改）</li>
-<li><strong>副本分片（Replica Shard）</strong>: 主分片的拷贝，可动态调整</li></p><p><strong>分片规则</strong>:
+<li><strong>副本分片（Replica Shard）</strong>: 主分片的拷贝，可动态调整</li></p>
+<p><strong>分片规则</strong>:
 <pre><code class="language-">索引数据量 = 主分片数 × 单分片大小
-推荐单分片大小：30-50GB</code></pre><p><strong>示例</strong>:
+推荐单分片大小：30-50GB</code></pre></p>
+<p><strong>示例</strong>:
 <pre><code class="language-bash"># 创建索引时设置分片
 PUT /products
 {
@@ -305,22 +379,33 @@ PUT /products
     "number_of_shards": 3,      # 3 个主分片
     "number_of_replicas": 1     # 每个主分片 1 个副本
   }
-}</p><h1>动态调整副本数</h1>
+}
+
+# 动态调整副本数
 PUT /products/_settings
 {
   "index": {
     "number_of_replicas": 2
   }
-}</code></pre><p><strong>分片与文档路由</strong>:
+}</code></pre></p>
+<p><strong>分片与文档路由</strong>:
 <pre><code class="language-">文档存储位置 = hash(文档 ID) % 主分片数</code></pre>
-这就是为什么主分片数创建后不能修改的原因。</p><h3>3.4 副本（Replica）</h3><p><strong>副本</strong>提供高可用和读性能扩展。</p><p><strong>作用</strong>:
+这就是为什么主分片数创建后不能修改的原因。</p>
+<h3>3.4 副本（Replica）</h3>
+<p><strong>副本</strong>提供高可用和读性能扩展。</p>
+<p><strong>作用</strong>:
 1. <strong>高可用</strong>: 主分片故障，副本自动晋升
 2. <strong>读扩展</strong>: 副本可以处理读请求
-3. <strong>负载均衡</strong>: 搜索请求分散到多个副本</p><p><strong>注意事项</strong>:
+3. <strong>负载均衡</strong>: 搜索请求分散到多个副本</p>
+<p><strong>注意事项</strong>:
 <li>副本数必须是整数（0、1、2...）</li>
 <li>副本不会分配到和主分片相同的节点</li>
-<li>副本数越多，写入性能越差（需要同步）</li></p><h3>3.5 集群健康状态</h3><pre><code class="language-bash"># 查看集群状态
-GET /_cluster/health</p><h1>输出</h1>
+<li>副本数越多，写入性能越差（需要同步）</li></p>
+<h3>3.5 集群健康状态</h3>
+<pre><code class="language-bash"># 查看集群状态
+GET /_cluster/health
+
+# 输出
 {
   "status": "green",           # 健康状态
   "number_of_nodes": 3,        # 节点数
@@ -328,52 +413,81 @@ GET /_cluster/health</p><h1>输出</h1>
   "active_primary_shards": 5,  # 活跃主分片
   "active_shards": 10,         # 活跃分片总数
   "unassigned_shards": 0       # 未分配分片
-}</code></pre><p><strong>健康状态</strong>:
-<tr> 状态 | 含义 | 处理建议 </tr>
-<tr>------|------|----------</tr>
-<tr> 🟢 green | 所有分片正常 | 无需处理 </tr>
-<tr> 🟡 yellow | 主分片正常，部分副本未分配 | 检查节点资源 </tr>
-<tr> 🔴 red | 有主分片未分配 | 立即处理，数据不完整 </tr></p><p>---</p><h2>四、实战：快速上手</h2><h3>4.1 安装和启动</h3><pre><code class="language-bash"># 下载（以 8.x 为例）
-wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-8.x.x-linux-x86_64.tar.gz</p><h1>解压</h1>
-tar -xzf elasticsearch-8.x.x-linux-x86_64.tar.gz</p><h1>启动</h1>
-./elasticsearch-8.x.x/bin/elasticsearch</p><h1>后台启动</h1>
-./elasticsearch-8.x.x/bin/elasticsearch -d</code></pre><p><strong>Docker 启动</strong>:
+}</code></pre>
+<p><strong>健康状态</strong>:
+<table>
+<tr><th>状态</th><th>含义</th><th>处理建议</th></tr>
+<tr><td>🟢 green</td><td>所有分片正常</td><td>无需处理</td></tr>
+<tr><td>🟡 yellow</td><td>主分片正常，部分副本未分配</td><td>检查节点资源</td></tr>
+<tr><td>🔴 red</td><td>有主分片未分配</td><td>立即处理，数据不完整</td></tr>
+</table></p>
+<p>---</p>
+<h2>四、实战：快速上手</h2>
+<h3>4.1 安装和启动</h3>
+<pre><code class="language-bash"># 下载（以 8.x 为例）
+wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-8.x.x-linux-x86_64.tar.gz
+
+# 解压
+tar -xzf elasticsearch-8.x.x-linux-x86_64.tar.gz
+
+# 启动
+./elasticsearch-8.x.x/bin/elasticsearch
+
+# 后台启动
+./elasticsearch-8.x.x/bin/elasticsearch -d</code></pre>
+<p><strong>Docker 启动</strong>:
 <pre><code class="language-bash">docker run -d \
   --name elasticsearch \
   -p 9200:9200 \
   -p 9300:9300 \
   -e "discovery.type=single-node" \
   -e "xpack.security.enabled=false" \
-  elasticsearch:8.x.x</code></pre><h3>4.2 基本 CRUD 操作</h3><pre><code class="language-bash"># ========== 创建 ==========
-<h1>自动分配 ID</h1>
+  elasticsearch:8.x.x</code></pre></p>
+<h3>4.2 基本 CRUD 操作</h3>
+<pre><code class="language-bash"># ========== 创建 ==========
+# 自动分配 ID
 POST /users/_doc
 {
   "name": "张三",
   "age": 25,
   "email": "zhangsan@example.com"
-}</p><h1>指定 ID</h1>
+}
+
+# 指定 ID
 PUT /users/_doc/1001
 {
   "name": "李四",
   "age": 28
-}</p><h1>========== 读取 ==========</h1>
-<h1>根据 ID 获取</h1>
-GET /users/_doc/1001</p><h1>搜索所有</h1>
-GET /users/_search</p><h1>========== 更新 ==========</h1>
-<h1>全量更新</h1>
+}
+
+# ========== 读取 ==========
+# 根据 ID 获取
+GET /users/_doc/1001
+
+# 搜索所有
+GET /users/_search
+
+# ========== 更新 ==========
+# 全量更新
 PUT /users/_doc/1001
 {
   "name": "李四",
   "age": 29,
   "email": "lisi@example.com"
-}</p><h1>部分更新</h1>
+}
+
+# 部分更新
 POST /users/_doc/1001/_update
 {
   "doc": {
     "age": 30
   }
-}</p><h1>========== 删除 ==========</h1>
-DELETE /users/_doc/1001</code></pre><h3>4.3 简单搜索</h3><pre><code class="language-bash"># 匹配查询
+}
+
+# ========== 删除 ==========
+DELETE /users/_doc/1001</code></pre>
+<h3>4.3 简单搜索</h3>
+<pre><code class="language-bash"># 匹配查询
 GET /users/_search
 {
   "query": {
@@ -381,7 +495,9 @@ GET /users/_search
       "name": "张三"
     }
   }
-}</p><h1>精确查询</h1>
+}
+
+# 精确查询
 GET /users/_search
 {
   "query": {
@@ -389,7 +505,9 @@ GET /users/_search
       "age": 25
     }
   }
-}</p><h1>范围查询</h1>
+}
+
+# 范围查询
 GET /users/_search
 {
   "query": {
@@ -400,7 +518,9 @@ GET /users/_search
       }
     }
   }
-}</p><h1>分页</h1>
+}
+
+# 分页
 GET /users/_search
 {
   "from": 0,
@@ -408,7 +528,9 @@ GET /users/_search
   "query": {
     "match_all": {}
   }
-}</code></pre><h3>4.4 聚合分析</h3><pre><code class="language-bash"># 统计各年龄段人数
+}</code></pre>
+<h3>4.4 聚合分析</h3>
+<pre><code class="language-bash"># 统计各年龄段人数
 GET /users/_search
 {
   "size": 0,
@@ -424,47 +546,69 @@ GET /users/_search
       }
     }
   }
-}</p><h1>输出</h1>
+}
+
+# 输出
 {
   "aggregations": {
     "age_groups": {
       "buckets": [
-        { "key": "</em>-20", "count": 15 },
+        { "key": "*-20", "count": 15 },
         { "key": "20-30", "count": 45 },
-        { "key": "30-<em>", "count": 30 }
+        { "key": "30-*", "count": 30 }
       ]
     }
   }
-}</code></pre><p>---</p><h2>五、最佳实践</h2><h3>5.1 索引设计</h3><pre><code class="language-bash"># ✅ 推荐：按时间分索引（日志场景）
+}</code></pre>
+<p>---</p>
+<h2>五、最佳实践</h2>
+<h3>5.1 索引设计</h3>
+<pre><code class="language-bash"># ✅ 推荐：按时间分索引（日志场景）
 logs-app-2026.03.17
 logs-app-2026.03.18
-logs-app-2026.03.19</p><h1>✅ 推荐：按业务分索引</h1>
+logs-app-2026.03.19
+
+# ✅ 推荐：按业务分索引
 products-index
 orders-index
-users-index</p><h1>❌ 避免：所有数据在一个索引</h1>
-all-data</code></pre><h3>5.2 分片规划</h3><pre><code class="language-bash"># 预估数据量
+users-index
+
+# ❌ 避免：所有数据在一个索引
+all-data</code></pre>
+<h3>5.2 分片规划</h3>
+<pre><code class="language-bash"># 预估数据量
 日增数据：10GB
 保留天数：30 天
-总数据量：300GB</p><h1>计算分片数</h1>
+总数据量：300GB
+
+# 计算分片数
 单分片目标：40GB
-主分片数：300 / 40 ≈ 8 个</p><h1>创建索引</h1>
+主分片数：300 / 40 ≈ 8 个
+
+# 创建索引
 PUT /logs-app
 {
   "settings": {
     "number_of_shards": 8,
     "number_of_replicas": 1
   }
-}</code></pre><h3>5.3 写入优化</h3><pre><code class="language-bash"># ✅ 推荐：批量写入
+}</code></pre>
+<h3>5.3 写入优化</h3>
+<pre><code class="language-bash"># ✅ 推荐：批量写入
 POST /_bulk
 { "index": { "_index": "products" } }
 { "name": "商品 1", "price": 100 }
 { "index": { "_index": "products" } }
 { "name": "商品 2", "price": 200 }
 { "index": { "_index": "products" } }
-{ "name": "商品 3", "price": 300 }</p><h1>❌ 避免：单条写入（性能差）</h1>
+{ "name": "商品 3", "price": 300 }
+
+# ❌ 避免：单条写入（性能差）
 POST /products/_doc { ... }
 POST /products/_doc { ... }
-POST /products/_doc { ... }</code></pre><h3>5.4 查询优化</h3><pre><code class="language-bash"># ✅ 推荐：使用 filter（不计算评分）
+POST /products/_doc { ... }</code></pre>
+<h3>5.4 查询优化</h3>
+<pre><code class="language-bash"># ✅ 推荐：使用 filter（不计算评分）
 GET /products/_search
 {
   "query": {
@@ -475,63 +619,99 @@ GET /products/_search
       ]
     }
   }
-}</p><h1>❌ 避免：深度分页</h1>
-GET /products/_search { "from": 10000, "size": 10 }</p><h1>✅ 推荐：search_after</h1>
+}
+
+# ❌ 避免：深度分页
+GET /products/_search { "from": 10000, "size": 10 }
+
+# ✅ 推荐：search_after
 GET /products/_search
 {
   "size": 10,
   "search_after": [1234567890],
   "sort": [{ "id": "asc" }]
-}</code></pre><p>---</p><h2>六、常见问题</h2><h3>Q1: ES 为什么搜索这么快？</h3><p><strong>A</strong>: 核心是<strong>倒排索引</strong>：
+}</code></pre>
+<p>---</p>
+<h2>六、常见问题</h2>
+<h3>Q1: ES 为什么搜索这么快？</h3>
+<p><strong>A</strong>: 核心是<strong>倒排索引</strong>：
 <pre><code class="language-">正向索引（文档→词）:
 文档 1: [苹果，手机，5G]
-文档 2: [苹果，电脑，M2]</p><p>倒排索引（词→文档）:
+文档 2: [苹果，电脑，M2]
+
+倒排索引（词→文档）:
 苹果: [文档 1, 文档 2]
 手机: [文档 1]
 电脑: [文档 2]
 5G: [文档 1]
 M2: [文档 2]</code></pre>
-搜索"苹果"时，直接定位到文档 1 和 2，无需全表扫描。</p><h3>Q2: 分片数设置多少合适？</h3><p><strong>A</strong>: 经验公式：
+搜索"苹果"时，直接定位到文档 1 和 2，无需全表扫描。</p>
+<h3>Q2: 分片数设置多少合适？</h3>
+<p><strong>A</strong>: 经验公式：
 <pre><code class="language-">分片数 = 总数据量 / 单分片目标大小
 单分片目标：30-50GB</code></pre>
 分片太小：管理开销大
-分片太大：恢复慢、影响扩展</p><h3>Q3: 写入后为什么搜不到？</h3><p><strong>A</strong>: ES 是<strong>近实时</strong>搜索，默认 1 秒刷新一次。解决：
+分片太大：恢复慢、影响扩展</p>
+<h3>Q3: 写入后为什么搜不到？</h3>
+<p><strong>A</strong>: ES 是<strong>近实时</strong>搜索，默认 1 秒刷新一次。解决：
 <pre><code class="language-bash"># 手动刷新
-POST /_refresh</p><h1>或调整刷新间隔</h1>
+POST /_refresh
+
+# 或调整刷新间隔
 PUT /products/_settings
 {
   "index": {
     "refresh_interval": "1s"  # 默认值
   }
-}</code></pre><h3>Q4: 如何监控 ES 集群？</h3><pre><code class="language-bash"># 集群健康
-GET /_cluster/health</p><h1>节点状态</h1>
-GET /_cat/nodes?v</p><h1>分片状态</h1>
-GET /_cat/shards?v</p><h1>索引大小</h1>
-GET /_cat/indices?v</p><h1>慢查询日志（配置）</h1>
+}</code></pre></p>
+<h3>Q4: 如何监控 ES 集群？</h3>
+<pre><code class="language-bash"># 集群健康
+GET /_cluster/health
+
+# 节点状态
+GET /_cat/nodes?v
+
+# 分片状态
+GET /_cat/shards?v
+
+# 索引大小
+GET /_cat/indices?v
+
+# 慢查询日志（配置）
 PUT /_cluster/settings
 {
   "index.search.slowlog.threshold.query.warn": "10s"
-}</code></pre><p>---</p><h2>总结</h2><p>本文介绍了 Elasticsearch 的核心概念和架构：</p><p><strong>核心概念</strong>:
-<tr> 概念 | 说明 | 类比 MySQL </tr>
-<tr>------|------|-----------</tr>
-<tr> 索引 | 数据存储的逻辑分区 | 数据库 </tr>
-<tr> 文档 | 最小数据单元（JSON） | 行 </tr>
-<tr> 字段 | 数据的属性 | 列 </tr>
-<tr> 映射 | 字段类型定义 | Schema </tr>
-<tr> 分词器 | 文本切分工具 | - </tr></p><p><strong>架构组件</strong>:
+}</code></pre>
+<p>---</p>
+<h2>总结</h2>
+<p>本文介绍了 Elasticsearch 的核心概念和架构：</p>
+<p><strong>核心概念</strong>:
+<table>
+<tr><th>概念</th><th>说明</th><th>类比 MySQL</th></tr>
+<tr><td>索引</td><td>数据存储的逻辑分区</td><td>数据库</td></tr>
+<tr><td>文档</td><td>最小数据单元（JSON）</td><td>行</td></tr>
+<tr><td>字段</td><td>数据的属性</td><td>列</td></tr>
+<tr><td>映射</td><td>字段类型定义</td><td>Schema</td></tr>
+<tr><td>分词器</td><td>文本切分工具</td><td>-</td></tr>
+</table></p>
+<p><strong>架构组件</strong>:
 <li><strong>节点</strong>: 集群中的服务器</li>
 <li><strong>分片</strong>: 数据分布的基本单位</li>
 <li><strong>副本</strong>: 提供高可用和读扩展</li>
-<li><strong>集群</strong>: 一个或多个节点组成的整体</li></p><p><strong>关键要点</strong>:
+<li><strong>集群</strong>: 一个或多个节点组成的整体</li></p>
+<p><strong>关键要点</strong>:
 1. ES 适合全文搜索和聚合分析，不适合事务场景
 2. 分片数创建后不可修改，要提前规划
 3. 副本数可动态调整，影响读性能和高可用
 4. 批量写入性能远高于单条写入
-5. 使用 filter 代替 query 提升查询性能</p><p>---</p><h2>延伸学习</h2>
-<li>下一篇：<a href="es-02-mapping.md">索引设计与映射详解</a></li>
+5. 使用 filter 代替 query 提升查询性能</p>
+<p>---</p>
+<h2>延伸学习</h2>
+<li>下一篇：<a href="es-02-mapping.html">索引设计与映射详解</a></li>
 <li>官方文档：https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html</li>
-<li>实战练习：安装 ES，完成本文所有示例</li></p><p>---</p><p></em>本文是 Elasticsearch 系列第 1 篇，下一篇将深入讲解索引设计和映射配置。*
-</p>
+<li>实战练习：安装 ES，完成本文所有示例</li>
+<p>---</p>
+<p><em>本文是 Elasticsearch 系列第 1 篇，下一篇将深入讲解索引设计和映射配置。</em></p>
       
       <a href="../index.html" class="back-link">← 返回首页</a>
     </article>
