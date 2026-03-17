@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>我的博客</title>
+  <title>技术博客</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -21,6 +21,42 @@
     }
     header h1 { margin-bottom: 10px; }
     header p { opacity: 0.9; }
+    .series-nav {
+      background: white;
+      padding: 20px;
+      margin: 20px auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .series-nav h3 {
+      color: #2c3e50;
+      margin-bottom: 15px;
+    }
+    .series-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+    .series-item {
+      background: #3498db;
+      color: white;
+      padding: 15px;
+      border-radius: 6px;
+      text-decoration: none;
+      text-align: center;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .series-item:hover {
+      transform: translateY(-2px);
+      background: #2980b9;
+    }
+    .series-item h4 {
+      margin-bottom: 5px;
+    }
+    .series-item span {
+      font-size: 0.85em;
+      opacity: 0.9;
+    }
     .post-list { margin-top: 30px; }
     .post-card {
       background: white;
@@ -36,6 +72,19 @@
     .post-card h2 a:hover { color: #3498db; }
     .post-date { color: #999; font-size: 0.9em; margin-bottom: 15px; }
     .post-excerpt { color: #666; }
+    .series-tag {
+      display: inline-block;
+      padding: 3px 10px;
+      background: #3498db;
+      color: white;
+      border-radius: 12px;
+      font-size: 0.8em;
+      margin-right: 10px;
+    }
+    .series-tag.redis { background: #dc382d; }
+    .series-tag.mysql { background: #00758f; }
+    .series-tag.es { background: #005571; }
+    .series-tag.distributed { background: #8e44ad; }
     footer { text-align: center; padding: 30px; color: #999; margin-top: 40px; }
     .read-more {
       display: inline-block;
@@ -48,53 +97,98 @@
 </head>
 <body>
   <header>
-    <h1>我的博客</h1>
-    <p>一个简洁的博客网站</p>
+    <h1>技术博客</h1>
+    <p>Redis · MySQL · Elasticsearch · 分布式架构</p>
   </header>
   
   <div class="container">
+    <div class="series-nav">
+      <h3>📚 技术系列</h3>
+      <div class="series-grid">
+        <a href="#redis" class="series-item">
+          <h4>Redis 系列</h4>
+          <span>7 篇 · 从入门到实战</span>
+        </a>
+        <a href="#mysql" class="series-item">
+          <h4>MySQL 系列</h4>
+          <span>8 篇 · 深入理解数据库</span>
+        </a>
+        <a href="#es" class="series-item">
+          <h4>Elasticsearch 系列</h4>
+          <span>6 篇 · 搜索引擎实战</span>
+        </a>
+        <a href="#distributed" class="series-item">
+          <h4>分布式架构系列</h4>
+          <span>10 篇 · 系统设计精髓</span>
+        </a>
+      </div>
+    </div>
+    
     <div class="post-list">
       
         <div class="post-card">
-          <h2><a href="welcome.html">欢迎来到我的博客</a></h2>
-          <div class="post-date">2026年3月13日</div>
-          <div class="post-excerpt"><!-- date: 2026-03-13T11:05:00.000Z -->
-# 欢迎来到我的博客
-
-你好！这是自动生成的第一篇文章，标志着你的博客已经成功搭建完成。
-
-## 🎉 博客功能
-
-你的新博客支持以下功能：
-
-- ✅ **文章编辑** - 在管理后台使用 Markdown 编辑器创作
-- ✅ **保存与更新** - 自动保存，随时修改
-- ✅ **Markdown 导入** - 支持...</div>
-          <a href="welcome.html" class="read-more">阅读全文 →</a>
+          <h2>
+            <span class="series-tag distributed">分布式架构</span>
+            <a href="posts/distributed-01-theory.html">分布式系统基础理论</a>
+          </h2>
+          <div class="post-date">2026 年 3 月 17 日 · 分布式架构系列第 1 篇</div>
+          <div class="post-excerpt">介绍分布式系统的核心挑战：网络不可靠、时钟不同步、节点故障、数据一致性。讲解可扩展性、可用性、一致性等设计原则，以及 C/S、三层、微服务、事件驱动等架构模式...</div>
+          <a href="posts/distributed-01-theory.html" class="read-more">阅读全文 →</a>
         </div>
       
         <div class="post-card">
-          <h2><a href="consistent-hashing.html">一致性哈希（Consistent Hashing）详解</a></h2>
-          <div class="post-date">2026年3月13日</div>
-          <div class="post-excerpt"><!-- date: 2026-03-13T08:29:00.000Z -->
-# 一致性哈希（Consistent Hashing）详解
+          <h2>
+            <span class="series-tag es">Elasticsearch</span>
+            <a href="posts/es-01-intro.html">ES 入门：核心概念与架构</a>
+          </h2>
+          <div class="post-date">2026 年 3 月 17 日 · Elasticsearch 系列第 1 篇</div>
+          <div class="post-excerpt">全面介绍 ES 的核心概念：索引、文档、映射、分词器。深入讲解分布式架构：节点、分片、副本。包含安装部署、CRUD 操作、搜索聚合等实战内容...</div>
+          <a href="posts/es-01-intro.html" class="read-more">阅读全文 →</a>
+        </div>
+      
+        <div class="post-card">
+          <h2>
+            <span class="series-tag mysql">MySQL</span>
+            <a href="posts/mysql-01-architecture.html">MySQL 架构与存储引擎</a>
+          </h2>
+          <div class="post-date">2026 年 3 月 17 日 · MySQL 系列第 1 篇</div>
+          <div class="post-excerpt">从宏观到微观解析 MySQL 整体架构：连接层、服务层、引擎层、存储层。深入讲解 InnoDB 核心机制：事务 ACID、锁机制、MVCC、日志系统（Redo/Undo/Binlog）...</div>
+          <a href="posts/mysql-01-architecture.html" class="read-more">阅读全文 →</a>
+        </div>
+      
+        <div class="post-card">
+          <h2>
+            <span class="series-tag redis">Redis</span>
+            <a href="posts/redis-01-intro.html">Redis 入门：数据结构与应用场景</a>
+          </h2>
+          <div class="post-date">2026 年 3 月 17 日 · Redis 系列第 1 篇</div>
+          <div class="post-excerpt">全面介绍 Redis 五大数据结构：String、Hash、List、Set、ZSet。通过实战场景演示如何使用合适的数据结构解决缓存、计数器、消息队列、排行榜等问题...</div>
+          <a href="posts/redis-01-intro.html" class="read-more">阅读全文 →</a>
+        </div>
 
-> **摘要**：一致性哈希是分布式系统中解决数据分片和节点扩缩容的经典算法。本文将深入讲解其原理、优势、实现方式以及实际应用场景。
-
----
-
-## 📋 目录
-
-1. [什么是一致性哈希](#什么是一致性哈希)
-2. [为什么需要一致性哈希](#为什么需...</div>
+        <div class="post-card">
+          <h2>
+            <a href="consistent-hashing.html">一致性哈希（Consistent Hashing）详解</a>
+          </h2>
+          <div class="post-date">2026 年 3 月 13 日</div>
+          <div class="post-excerpt">一致性哈希是分布式系统中解决数据分片和节点扩缩容的经典算法。本文将深入讲解其原理、优势、实现方式以及实际应用场景...</div>
           <a href="consistent-hashing.html" class="read-more">阅读全文 →</a>
+        </div>
+      
+        <div class="post-card">
+          <h2>
+            <a href="welcome.html">欢迎来到我的博客</a>
+          </h2>
+          <div class="post-date">2026 年 3 月 13 日</div>
+          <div class="post-excerpt">你好！这是自动生成的第一篇文章，标志着你的博客已经成功搭建完成。支持 Markdown 文章编辑、自动保存、Markdown 导入等功能...</div>
+          <a href="welcome.html" class="read-more">阅读全文 →</a>
         </div>
       
     </div>
   </div>
   
   <footer>
-    <p>© 2026 博主. Powered by Static Blog.</p>
+    <p>© 2026 技术博客。Powered by Static Blog.</p>
   </footer>
 </body>
 </html>

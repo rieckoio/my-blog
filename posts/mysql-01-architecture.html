@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MySQL 架构与存储引擎</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+    article {
+      background: white;
+      padding: 40px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    header {
+      background: #2c3e50;
+      color: white;
+      padding: 40px 20px;
+      text-align: center;
+      margin-bottom: 30px;
+      border-radius: 8px;
+    }
+    header h1 { margin-bottom: 10px; }
+    header p { opacity: 0.9; }
+    .meta {
+      background: #ecf0f1;
+      padding: 15px 20px;
+      border-radius: 6px;
+      margin-bottom: 30px;
+      font-size: 0.9em;
+    }
+    .meta span {
+      margin-right: 20px;
+      color: #7f8c8d;
+    }
+    h1 { font-size: 2em; margin-bottom: 0.5em; color: #2c3e50; }
+    h2 { font-size: 1.6em; margin: 1.5em 0 0.8em; color: #34495e; border-bottom: 2px solid #3498db; padding-bottom: 0.3em; }
+    h3 { font-size: 1.3em; margin: 1.2em 0 0.6em; color: #7f8c8d; }
+    p { margin-bottom: 1em; }
+    pre {
+      background: #282c34;
+      color: #abb2bf;
+      padding: 20px;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin: 1.5em 0;
+    }
+    code {
+      background: #ecf0f1;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 0.9em;
+      color: #e74c3c;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: inherit;
+    }
+    blockquote {
+      border-left: 4px solid #3498db;
+      padding-left: 20px;
+      margin: 1.5em 0;
+      color: #7f8c8d;
+      background: #f8f9fa;
+      padding: 15px 20px;
+      border-radius: 0 6px 6px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5em 0;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: left;
+    }
+    th {
+      background: #34495e;
+      color: white;
+    }
+    tr:nth-child(even) {
+      background: #f8f9fa;
+    }
+    ul, ol {
+      margin: 1em 0;
+      padding-left: 2em;
+    }
+    li {
+      margin-bottom: 0.5em;
+    }
+    a {
+      color: #3498db;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .back-link {
+      display: inline-block;
+      margin-top: 30px;
+      padding: 10px 20px;
+      background: #3498db;
+      color: white;
+      border-radius: 6px;
+      text-decoration: none;
+    }
+    .back-link:hover {
+      background: #2980b9;
+      text-decoration: none;
+    }
+    footer {
+      text-align: center;
+      padding: 30px;
+      color: #999;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1><a href="../index.html" style="color: white; text-decoration: none;">技术博客</a></h1>
+    <p>Redis · MySQL · Elasticsearch · 分布式架构</p>
+  </header>
+  
+  <div class="container">
+    <article>
+      <div class="meta">
+        <span>📚 MySQL 系列第 1 篇  </span>
+        <span>⭐ ⭐⭐ 基础  </span>
+        <span>📅 2026 年 3 月 17 日</span>
+      </div>
+      
+      <h1>MySQL 架构与存储引擎</h1><p><blockquote><strong>系列</strong>: MySQL 系列第 1 篇  </blockquote>
+<blockquote><strong>难度</strong>: ⭐⭐ 基础  </blockquote>
+<blockquote><strong>阅读时间</strong>: 约 20 分钟  </blockquote>
+<blockquote><strong>上一篇</strong>: 无 | <strong>下一篇</strong>: <a href="mysql-02-index.md">索引原理与 B+ 树详解</a></blockquote></p><p>---</p><h2>引言</h2><p>MySQL 是全球最流行的开源关系型数据库，从创业公司到互联网巨头，几乎无处不在。然而，很多开发者使用 MySQL 多年，却对其内部架构一知半解。</p><p><strong>为什么需要理解 MySQL 架构？</strong>
+<li>写出更高效的 SQL</li>
+<li>快速定位性能问题</li>
+<li>合理设计表结构和索引</li>
+<li>选择正确的存储引擎</li></p><p>本文将从宏观到微观，全面解析 MySQL 的整体架构和核心存储引擎，帮你建立系统的知识框架。</p><p>---</p><h2>一、MySQL 整体架构</h2><h3>1.1 架构图</h3><pre><code class="language-">┌─────────────────────────────────────────────────────────┐
+│                      应用层                              │
+│                 (Java/Python/Go/...)                     │
+└─────────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────┐
+│                   连接层 (Connection)                    │
+│   • 连接管理  • 身份认证  • 权限验证  • 线程池          │
+└─────────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────┐
+│                 服务层 (Server Layer)                    │
+│  ┌─────────────────────────────────────────────────┐    │
+│  │              SQL 接口                            │    │
+│  │  • 解析器 (Parser)                               │    │
+│  │  • 分析器 (Analyzer)                             │    │
+│  │  • 优化器 (Optimizer)                            │    │
+│  │  • 缓存 (Query Cache - 8.0 已移除)               │    │
+│  └─────────────────────────────────────────────────┘    │
+│  ┌─────────────────────────────────────────────────┐    │
+│  │              内置函数                            │    │
+│  │  • 日期函数  • 数学函数  • 加密函数  • ...       │    │
+│  └─────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────┐
+│                 引擎层 (Storage Engine)                  │
+│  ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐    │
+│  │InnoDB │ │ MyISAM│ │Memory │ │Archive│ │ ...  │    │
+│  └───────┘ └───────┘ └───────┘ └───────┘ └───────┘    │
+└─────────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────┐
+│               存储层 (File System)                       │
+│   • 数据文件 (.ibd)  • 日志文件  • 配置文件             │
+└─────────────────────────────────────────────────────────┘</code></pre><h3>1.2 各层职责</h3><p>#### 连接层
+负责处理客户端连接，包括：
+<li><strong>连接管理</strong>: 维护连接池，复用连接</li>
+<li><strong>身份认证</strong>: 验证用户名密码</li>
+<li><strong>权限验证</strong>: 检查用户是否有执行权限</li>
+<li><strong>线程管理</strong>: 为每个连接分配线程（一连接一线程模型）</li></p><p>#### 服务层
+MySQL 的"大脑"，处理所有 SQL 操作：</p><p><strong>1. 解析器 (Parser)</strong>
+<pre><code class="language-sql">SELECT <em> FROM users WHERE id = 1;</code></pre>
+解析器将 SQL 文本解析成<strong>语法树</strong>，检查语法是否正确。</p><p><strong>2. 分析器 (Analyzer)</strong>
+<li>检查表是否存在</li>
+<li>检查字段是否存在</li>
+<li>验证权限</li></p><p><strong>3. 优化器 (Optimizer)</strong>
+<li>选择使用哪个索引</li>
+<li>决定表连接顺序</li>
+<li>生成执行计划</li></p><p><strong>4. 执行器 (Executor)</strong>
+<li>调用存储引擎接口</li>
+<li>返回结果给客户端</li></p><p>#### 引擎层
+负责<strong>数据的存储和提取</strong>，不同引擎有不同特性：
+<li>InnoDB: 支持事务、行锁（默认）</li>
+<li>MyISAM: 不支持事务、表锁</li>
+<li>Memory: 内存存储、速度快</li>
+<li>Archive: 归档存储、压缩率高</li></p><p>#### 存储层
+操作系统文件系统，负责实际数据存储。</p><p>---</p><h2>二、存储引擎详解</h2><h3>2.1 InnoDB（默认引擎）</h3><p>MySQL 5.5+ 的默认引擎，支持事务和行级锁。</p><p><strong>核心特性</strong>:
+<li>✅ 支持 ACID 事务</li>
+<li>✅ 支持行级锁</li>
+<li>✅ 支持外键约束</li>
+<li>✅ 支持 MVCC（多版本并发控制）</li>
+<li>✅ 崩溃恢复能力强</li></p><p><strong>适用场景</strong>:
+<li>需要事务支持的业务（订单、支付）</li>
+<li>高并发读写</li>
+<li>数据一致性要求高</li></p><p><strong>表创建示例</strong>:
+<pre><code class="language-sql">CREATE TABLE users (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) NOT NULL,
+    email VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;</code></pre><p><strong>物理存储结构</strong>:
+<pre><code class="language-">ibdata1          # 系统表空间（共享）
+ib_logfile0      # 重做日志
+ib_logfile1      # 重做日志
+table_name.ibd   # 表空间文件（每表一个）</code></pre><h3>2.2 MyISAM（ legacy 引擎）</h3><p>MySQL 5.5 之前的默认引擎，现在已不推荐使用。</p><p><strong>核心特性</strong>:
+<li>❌ 不支持事务</li>
+<li>❌ 不支持行级锁（只有表锁）</li>
+<li>❌ 不支持外键</li>
+<li>✅ 读性能较好</li>
+<li>✅ 存储空间较小</li></p><p><strong>适用场景</strong>:
+<li>只读或读多写少</li>
+<li>不需要事务</li>
+<li>历史数据归档</li></p><p><strong>查看表引擎</strong>:
+<pre><code class="language-sql">SHOW TABLE STATUS LIKE 'table_name';
+SHOW CREATE TABLE table_name;</code></pre><h3>2.3 其他引擎</h3><p><tr> 引擎 | 特点 | 适用场景 </tr>
+<tr>------|------|----------</tr>
+<tr> Memory | 数据存储在内存 | 临时表、缓存 </tr>
+<tr> Archive | 高压缩比 | 历史数据归档 </tr>
+<tr> CSV | CSV 格式存储 | 数据交换 </tr>
+<tr> Federated | 远程表访问 | 分布式查询 </tr></p><p>---</p><h2>三、InnoDB 核心机制</h2><h3>3.1 事务（Transaction）</h3><p>事务是 InnoDB 最核心的特性，保证数据的 ACID 属性。</p><p><strong>ACID 四特性</strong>:</p><p><tr> 特性 | 含义 | 实现机制 </tr>
+<tr>------|------|----------</tr>
+<tr> <strong>A</strong>tomicity（原子性） | 要么全做，要么全不做 | Undo Log </tr>
+<tr> <strong>C</strong>onsistency（一致性） | 数据从一个一致状态到另一个一致状态 | 约束 + 触发器 </tr>
+<tr> <strong>I</strong>solation（隔离性） | 事务之间互不干扰 | 锁 + MVCC </tr>
+<tr> <strong>D</strong>urability（持久性） | 提交后永久保存 | Redo Log </tr></p><p><strong>事务示例</strong>:
+<pre><code class="language-sql">-- 开启事务
+START TRANSACTION;</p><p>-- 扣减库存
+UPDATE products SET stock = stock - 1 WHERE id = 1001;</p><p>-- 创建订单
+INSERT INTO orders (product_id, user_id) VALUES (1001, 5001);</p><p>-- 提交事务
+COMMIT;</p><p>-- 或者回滚
+-- ROLLBACK;</code></pre><h3>3.2 锁机制</h3><p>InnoDB 支持多种锁：</p><p><strong>1. 行锁（Row Lock）</strong>
+<pre><code class="language-sql">-- 共享锁（读锁）
+SELECT </em> FROM users WHERE id = 1 LOCK IN SHARE MODE;</p><p>-- 排他锁（写锁）
+SELECT <em> FROM users WHERE id = 1 FOR UPDATE;</code></pre><p><strong>2. 表锁（Table Lock）</strong>
+<pre><code class="language-sql">LOCK TABLES users WRITE;
+-- 操作...
+UNLOCK TABLES;</code></pre><p><strong>3. 意向锁（Intention Lock）</strong>
+<li>事务在获取行锁前，先获取表的意向锁</li>
+<li>用于判断表是否可以加表锁</li></p><p><strong>锁粒度对比</strong>:
+<tr> 锁类型 | 粒度 | 并发度 | 开销 </tr>
+<tr>--------|------|--------|------</tr>
+<tr> 表锁 | 整张表 | 低 | 小 </tr>
+<tr> 行锁 | 单行 | 高 | 大 </tr>
+<tr> 间隙锁 | 索引间隙 | 中 | 中 </tr></p><h3>3.3 MVCC（多版本并发控制）</h3><p>MVCC 让读写操作不冲突，大幅提升并发性能。</p><p><strong>原理</strong>:
+<li>每行数据有多个版本</li>
+<li>读操作读取历史版本，不阻塞写</li>
+<li>写操作创建新版本</li></p><p><strong>隐藏字段</strong>:
+每行记录有三个隐藏字段：
+<li><code>DB_TRX_ID</code>: 最近修改事务的 ID</li>
+<li><code>DB_ROLL_PTR</code>: 回滚指针，指向 Undo Log</li>
+<li><code>DB_ROW_ID</code>: 隐藏的行 ID</li></p><p><strong>读视图（Read View）</strong>:
+<li>事务启动时创建</li>
+<li>记录当前活跃事务列表</li>
+<li>判断哪个版本的数据可见</li></p><h3>3.4 日志系统</h3><p>InnoDB 有三种日志：</p><p><strong>1. Redo Log（重做日志）</strong>
+<li>记录数据修改</li>
+<li>崩溃恢复用</li>
+<li>循环写入（固定大小）</li>
+<li>WAL（Write-Ahead Logging）技术</li></p><p><strong>2. Undo Log（回滚日志）</strong>
+<li>记录反向操作</li>
+<li>事务回滚用</li>
+<li>MVCC 版本链</li></p><p><strong>3. Binlog（归档日志）</strong>
+<li>Server 层产生</li>
+<li>记录所有修改</li>
+<li>主从复制用</li>
+<li>追加写入</li></p><p><strong>Redo Log vs Binlog</strong>:
+<tr> 特性 | Redo Log | Binlog </tr>
+<tr>------|----------|--------</tr>
+<tr> 产生层 | 引擎层 | Server 层 </tr>
+<tr> 写入方式 | 循环写 | 追加写 </tr>
+<tr> 用途 | 崩溃恢复 | 主从复制、数据恢复 </tr>
+<tr> 格式 | 物理日志 | 逻辑日志 </tr></p><p>---</p><h2>四、实战：查看和分析</h2><h3>4.1 查看引擎信息</h3><pre><code class="language-sql">-- 查看所有支持的引擎
+SHOW ENGINES;</p><p>-- 查看默认引擎
+SHOW VARIABLES LIKE 'storage_engine';</p><p>-- 查看表的引擎
+SELECT table_name, engine 
+FROM information_schema.tables 
+WHERE table_schema = 'your_database';</code></pre><h3>4.2 查看事务状态</h3><pre><code class="language-sql">-- 查看活跃事务
+SELECT </em> FROM information_schema.innodb_trx;</p><p>-- 查看锁等待
+SELECT <em> FROM information_schema.innodb_lock_waits;</p><p>-- 查看锁信息
+SELECT </em> FROM performance_schema.data_locks;</code></pre><h3>4.3 查看日志配置</h3><pre><code class="language-sql">-- Redo Log 配置
+SHOW VARIABLES LIKE 'innodb_log_file_size';
+SHOW VARIABLES LIKE 'innodb_log_files_in_group';</p><p>-- Binlog 配置
+SHOW VARIABLES LIKE 'log_bin';
+SHOW VARIABLES LIKE 'binlog_format';</p><p>-- 查看 Binlog 文件
+SHOW BINARY LOGS;</code></pre><h3>4.4 性能监控</h3><pre><code class="language-sql">-- 查看 InnoDB 状态
+SHOW ENGINE INNODB STATUS\G</p><p>-- 查看慢查询
+SHOW VARIABLES LIKE 'slow_query_log';
+SHOW VARIABLES LIKE 'long_query_time';</p><p>-- 查看当前连接
+SHOW PROCESSLIST;</code></pre><p>---</p><h2>五、最佳实践</h2><h3>5.1 引擎选择</h3><pre><code class="language-sql">-- ✅ 推荐：明确指定引擎
+CREATE TABLE orders (
+    id BIGINT PRIMARY KEY,
+    amount DECIMAL(10,2)
+) ENGINE=InnoDB;</p><p>-- ❌ 避免：依赖默认值（可能变化）
+CREATE TABLE orders (
+    id BIGINT PRIMARY KEY,
+    amount DECIMAL(10,2)
+);</code></pre><h3>5.2 事务使用</h3><pre><code class="language-sql">-- ✅ 推荐：短事务
+START TRANSACTION;
+UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+UPDATE accounts SET balance = balance + 100 WHERE id = 2;
+COMMIT;</p><p>-- ❌ 避免：长事务（占用资源）
+START TRANSACTION;
+SELECT <em> FROM huge_table;  -- 耗时很长
+-- ... 其他操作
+COMMIT;</code></pre><h3>5.3 锁优化</h3><pre><code class="language-sql">-- ✅ 推荐：精确锁（走索引）
+SELECT </em> FROM users WHERE id = 1 FOR UPDATE;</p><p>-- ❌ 避免：全表锁（不走索引）
+SELECT <em> FROM users WHERE name = '张三' FOR UPDATE;
+-- 如果 name 没有索引，会锁全表</code></pre><h3>5.4 配置优化</h3><pre><code class="language-ini"># my.cnf 推荐配置
+[mysqld]
+<h1>InnoDB 缓冲池（物理内存的 50-70%）</h1>
+innodb_buffer_pool_size = 4G</p><h1>Redo Log 大小</h1>
+innodb_log_file_size = 512M</p><h1>日志缓冲区</h1>
+innodb_log_buffer_size = 64M</p><h1>刷新策略（1=最安全，0=性能最好）</h1>
+innodb_flush_log_at_trx_commit = 1</p><h1>最大连接数</h1>
+max_connections = 500</code></pre><p>---</p><h2>六、常见问题</h2><h3>Q1: 为什么我的表不支持事务？</h3><p><strong>A</strong>: 检查表的存储引擎：
+<pre><code class="language-sql">SHOW CREATE TABLE your_table;</code></pre>
+如果不是 InnoDB，转换引擎：
+<pre><code class="language-sql">ALTER TABLE your_table ENGINE=InnoDB;</code></pre><h3>Q2: 死锁怎么解决？</h3><p><strong>A</strong>: 
+1. 查看死锁信息：<code>SHOW ENGINE INNODB STATUS\G</code>
+2. 常见原因：
+<li>事务交叉更新多行</li>
+<li>索引使用不当导致锁升级</li>
+3. 解决方案：
+<li>固定访问顺序</li>
+<li>减少事务粒度</li>
+<li>添加合适索引</li></p><h3>Q3: Redo Log 满了会怎样？</h3><p><strong>A</strong>: 数据库会暂停，等待 Redo Log 刷盘。解决方法：
+<li>增大 Redo Log 文件</li>
+<li>优化大事务，拆分成小事务</li>
+<li>调整 <code>innodb_log_file_size</code></li></p><h3>Q4: 如何选择事务隔离级别？</h3><p><strong>A</strong>: MySQL 支持四种隔离级别：
+<pre><code class="language-sql">-- 查看当前级别
+SELECT @@tx_isolation;</p><p>-- 设置级别
+SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED;</code></pre><p><tr> 级别 | 脏读 | 不可重复读 | 幻读 | 推荐 </tr>
+<tr>------|------|------------|------|------</tr>
+<tr> READ UNCOMMITTED | ✅ | ✅ | ✅ | 不推荐 </tr>
+<tr> READ COMMITTED | ❌ | ✅ | ✅ | 一般 </tr>
+<tr> REPEATABLE READ（默认）| ❌ | ❌ | ✅ | 推荐 </tr>
+<tr> SERIALIZABLE | ❌ | ❌ | ❌ | 特殊场景 </tr></p><p>---</p><h2>总结</h2><p>本文介绍了 MySQL 的整体架构和存储引擎：</p><p><strong>核心要点</strong>:
+1. MySQL 采用分层架构：连接层 → 服务层 → 引擎层 → 存储层
+2. InnoDB 是默认引擎，支持事务、行锁、MVCC
+3. 事务保证 ACID，通过日志系统实现
+4. 锁机制影响并发性能，要合理使用
+5. Redo Log 用于崩溃恢复，Binlog 用于主从复制</p><p><strong>知识框架</strong>:
+<pre><code class="language-">MySQL 架构
+├── 连接层（连接管理、权限验证）
+├── 服务层（SQL 解析、优化、执行）
+├── 引擎层（InnoDB、MyISAM...）
+│   ├── 事务（ACID）
+│   ├── 锁（行锁、表锁、间隙锁）
+│   ├── MVCC（多版本并发控制）
+│   └── 日志（Redo、Undo、Binlog）
+└── 存储层（文件系统）</code></pre><p>---</p><h2>延伸学习</h2>
+<li>下一篇：<a href="mysql-02-index.md">索引原理与 B+ 树详解</a></li>
+<li>官方文档：https://dev.mysql.com/doc/</li>
+<li>推荐书籍：《MySQL 技术内幕：InnoDB 存储引擎》</li></p><p>---</p><p></em>本文是 MySQL 系列第 1 篇，下一篇将深入讲解索引原理和 B+ 树。*
+</p>
+      
+      <a href="../index.html" class="back-link">← 返回首页</a>
+    </article>
+  </div>
+  
+  <footer>
+    <p>© 2026 技术博客。Powered by Static Blog.</p>
+  </footer>
+</body>
+</html>

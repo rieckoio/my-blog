@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>分布式系统基础理论</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+    article {
+      background: white;
+      padding: 40px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    header {
+      background: #2c3e50;
+      color: white;
+      padding: 40px 20px;
+      text-align: center;
+      margin-bottom: 30px;
+      border-radius: 8px;
+    }
+    header h1 { margin-bottom: 10px; }
+    header p { opacity: 0.9; }
+    .meta {
+      background: #ecf0f1;
+      padding: 15px 20px;
+      border-radius: 6px;
+      margin-bottom: 30px;
+      font-size: 0.9em;
+    }
+    .meta span {
+      margin-right: 20px;
+      color: #7f8c8d;
+    }
+    h1 { font-size: 2em; margin-bottom: 0.5em; color: #2c3e50; }
+    h2 { font-size: 1.6em; margin: 1.5em 0 0.8em; color: #34495e; border-bottom: 2px solid #3498db; padding-bottom: 0.3em; }
+    h3 { font-size: 1.3em; margin: 1.2em 0 0.6em; color: #7f8c8d; }
+    p { margin-bottom: 1em; }
+    pre {
+      background: #282c34;
+      color: #abb2bf;
+      padding: 20px;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin: 1.5em 0;
+    }
+    code {
+      background: #ecf0f1;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 0.9em;
+      color: #e74c3c;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: inherit;
+    }
+    blockquote {
+      border-left: 4px solid #3498db;
+      padding-left: 20px;
+      margin: 1.5em 0;
+      color: #7f8c8d;
+      background: #f8f9fa;
+      padding: 15px 20px;
+      border-radius: 0 6px 6px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5em 0;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: left;
+    }
+    th {
+      background: #34495e;
+      color: white;
+    }
+    tr:nth-child(even) {
+      background: #f8f9fa;
+    }
+    ul, ol {
+      margin: 1em 0;
+      padding-left: 2em;
+    }
+    li {
+      margin-bottom: 0.5em;
+    }
+    a {
+      color: #3498db;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .back-link {
+      display: inline-block;
+      margin-top: 30px;
+      padding: 10px 20px;
+      background: #3498db;
+      color: white;
+      border-radius: 6px;
+      text-decoration: none;
+    }
+    .back-link:hover {
+      background: #2980b9;
+      text-decoration: none;
+    }
+    footer {
+      text-align: center;
+      padding: 30px;
+      color: #999;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1><a href="../index.html" style="color: white; text-decoration: none;">技术博客</a></h1>
+    <p>Redis · MySQL · Elasticsearch · 分布式架构</p>
+  </header>
+  
+  <div class="container">
+    <article>
+      <div class="meta">
+        <span>📚 分布式架构系列第 1 篇  </span>
+        <span>⭐ ⭐⭐ 基础  </span>
+        <span>📅 2026 年 3 月 17 日</span>
+      </div>
+      
+      <h1>分布式系统基础理论</h1><p><blockquote><strong>系列</strong>: 分布式架构系列第 1 篇  </blockquote>
+<blockquote><strong>难度</strong>: ⭐⭐ 基础  </blockquote>
+<blockquote><strong>阅读时间</strong>: 约 25 分钟  </blockquote>
+<blockquote><strong>上一篇</strong>: 无 | <strong>下一篇</strong>: <a href="distributed-02-cap-base.md">CAP 定理与 BASE 理论</a></blockquote></p><p>---</p><h2>引言</h2><p>当你开发的应用用户量从 100 增长到 100 万，日请求从 1 千增长到 1 亿时，单台服务器再也无法承载，你必须将系统拆分成多个服务，部署在多台机器上——这就是<strong>分布式系统</strong>。</p><p><strong>什么是分布式系统？</strong></p><p><blockquote>分布式系统是一组通过网络通信协同工作的计算机，对用户呈现为单一、一致的系统。</blockquote></p><p>简单来说，分布式系统就是<strong>多台机器一起干活，看起来像一台机器</strong>。</p><p><strong>为什么需要分布式？</strong></p><p><tr> 挑战 | 单机方案 | 分布式方案 </tr>
+<tr>------|----------|------------</tr>
+<tr> <strong>性能瓶颈</strong> | 升级硬件（纵向扩展） | 增加机器（横向扩展） </tr>
+<tr> <strong>存储限制</strong> | 增加磁盘 | 数据分片存储 </tr>
+<tr> <strong>单点故障</strong> | 硬件冗余 | 多副本冗余 </tr>
+<tr> <strong>地理延迟</strong> | CDN | 多地部署 </tr></p><p>然而，分布式系统并非银弹。它带来了复杂性：网络延迟、数据一致性、故障处理、分布式事务等问题。</p><p>本文将从基础理论出发，帮你建立分布式系统的知识框架，为后续学习打下坚实基础。</p><p>---</p><h2>一、分布式系统的挑战</h2><h3>1.1 网络不可靠</h3><p><strong>网络分区（Network Partition）</strong>: 节点之间网络中断，无法通信。</p><pre><code class="language-">┌─────────┐         网络中断         ┌─────────┐
+│ 节点 A  │ ════════════════════════ │ 节点 B  │
+│  分区 1  │                        │  分区 2  │
+└─────────┘                        └─────────┘
+    │                                    │
+    ▼                                    ▼
+可以读写                            可以读写
+（数据可能不一致）                   （数据可能不一致）</code></pre><p><strong>影响</strong>:
+<li>请求超时</li>
+<li>数据不一致</li>
+<li>脑裂（Split-Brain）</li></p><p><strong>应对策略</strong>:
+<li>超时重试</li>
+<li>熔断降级</li>
+<li>一致性协议（如 Raft、Paxos）</li></p><h3>1.2 时钟不同步</h3><p><strong>问题</strong>: 分布式系统中，每台机器的时钟可能不同步。</p><pre><code class="language-">节点 A: 10:00:00  写入数据 X
+节点 B: 09:59:58  写入数据 Y  ← 实际发生在 X 之后，但时钟更早
+节点 C: 10:00:01  读取数据</code></pre><p><strong>影响</strong>:
+<li>无法准确判断事件顺序</li>
+<li>分布式锁失效</li>
+<li>数据版本混乱</li></p><p><strong>解决方案</strong>:
+<li><strong>NTP</strong>: 网络时间协议，同步物理时钟（精度毫秒级）</li>
+<li><strong>逻辑时钟</strong>: Lamport 时间戳、向量时钟</li>
+<li><strong>混合逻辑时钟（HLC）</strong>: 结合物理和逻辑时钟</li></p><h3>1.3 节点故障</h3><p><strong>故障类型</strong>:
+<tr> 类型 | 说明 | 处理难度 </tr>
+<tr>------|------|----------</tr>
+<tr> <strong>崩溃 - 恢复</strong> | 节点宕机后重启 | 简单 </tr>
+<tr> <strong>拜占庭</strong> | 节点行为异常（恶意、bug） | 困难 </tr></p><p><strong>故障概率计算</strong>:
+<pre><code class="language-">假设单台服务器年故障率：3%
+100 台服务器，至少 1 台故障的概率：
+P = 1 - (0.97)^100 ≈ 95%</code></pre><p><strong>结论</strong>: 在大规模集群中，<strong>故障是常态，不是异常</strong>。</p><p><strong>应对策略</strong>:
+<li>冗余副本</li>
+<li>自动故障转移</li>
+<li>限流降级</li></p><h3>1.4 数据一致性</h3><p><strong>问题</strong>: 数据在多个节点有副本，如何保证一致性？</p><pre><code class="language-">客户端写入：X = 100</p><p>┌─────────┐   ┌─────────┐   ┌─────────┐
+│ 副本 A  │   │ 副本 B  │   │ 副本 C  │
+│  X=100  │   │  X=100  │   │  X=100  │
+└─────────┘   └─────────┘   └─────────┘
+     ✓             ✓             ✗ (网络故障)</p><p>此时读取副本 C，读到旧数据？</code></pre><p><strong>一致性级别</strong>:
+<li><strong>强一致性</strong>: 所有副本同时更新，读取总是最新</li>
+<li><strong>弱一致性</strong>: 不保证副本同步时间</li>
+<li><strong>最终一致性</strong>: 保证最终会一致，但中间可能不一致</li></p><h3>1.5 并发控制</h3><p><strong>问题</strong>: 多个客户端同时修改同一数据。</p><pre><code class="language-">客户端 A: 余额 100，取款 50
+客户端 B: 余额 100，取款 60</p><p>同时执行：
+A 读取余额：100
+B 读取余额：100
+A 写入余额：50
+B 写入余额：40  ← 错误！实际应该透支 10</code></pre><p><strong>解决方案</strong>:
+<li>分布式锁</li>
+<li>乐观锁（CAS）</li>
+<li>分布式事务</li></p><p>---</p><h2>二、分布式系统核心问题</h2><h3>2.1 通信问题</h3><p><strong>同步 vs 异步</strong>:</p><p><tr> 方式 | 说明 | 优点 | 缺点 | 场景 </tr>
+<tr>------|------|------|------|------</tr>
+<tr> <strong>同步</strong> | 发送后等待响应 | 简单、实时 | 阻塞、性能低 | 强一致性场景 </tr>
+<tr> <strong>异步</strong> | 发送后不等待 | 高性能、解耦 | 复杂、延迟 | 最终一致性场景 </tr></p><p><strong>通信协议</strong>:
+<li><strong>HTTP/REST</strong>: 简单、通用</li>
+<li><strong>gRPC</strong>: 高性能、强类型</li>
+<li><strong>消息队列</strong>: Kafka、RabbitMQ、RocketMQ</li></p><h3>2.2 一致性问题</h3><p><strong>一致性模型</strong>:</p><pre><code class="language-">强一致性 ←──────────→ 最终一致性
+    │                      │
+    │                      │
+线性一致性           因果一致性
+    │                      │
+    │                      │
+顺序一致性           读己之所写</code></pre><p><strong>常见一致性协议</strong>:
+<li><strong>2PC/3PC</strong>: 两阶段/三阶段提交</li>
+<li><strong>Paxos</strong>: 经典一致性算法</li>
+<li><strong>Raft</strong>: 易于理解的一致性算法</li>
+<li><strong>ZAB</strong>: ZooKeeper 使用的协议</li></p><h3>2.3 协调问题</h3><p><strong>问题</strong>: 分布式系统需要协调各节点的行为。</p><p><strong>典型场景</strong>:
+<li>选举主节点</li>
+<li>分配任务</li>
+<li>配置管理</li>
+<li>服务发现</li></p><p><strong>解决方案</strong>:
+<li><strong>集中式协调</strong>: ZooKeeper、etcd、Consul</li>
+<li><strong>分布式协调</strong>: Gossip 协议</li></p><h3>2.4 容错问题</h3><p><strong>容错策略</strong>:</p><p><tr> 策略 | 说明 | 适用场景 </tr>
+<tr>------|------|----------</tr>
+<tr> <strong>重试</strong> | 失败后重新尝试 | 临时故障 </tr>
+<tr> <strong>超时</strong> | 超过时间放弃 | 防止无限等待 </tr>
+<tr> <strong>熔断</strong> | 连续失败后暂停请求 | 保护下游服务 </tr>
+<tr> <strong>降级</strong> | 返回默认值或缓存 | 保证核心功能 </tr>
+<tr> <strong>限流</strong> | 限制请求速率 | 防止系统过载 </tr></p><p>---</p><h2>三、分布式系统设计原则</h2><h3>3.1 可扩展性（Scalability）</h3><p><strong>定义</strong>: 系统能够通过增加资源来提升性能。</p><p><strong>扩展方式</strong>:</p><pre><code class="language-">纵向扩展（Scale Up）
+┌─────────┐
+│  大服务器 │  ← 增加 CPU、内存
+│  大服务器 │
+└─────────┘</p><p>横向扩展（Scale Out）
+┌───┐ ┌───┐ ┌───┐  ← 增加服务器数量
+│小 │ │小 │ │小 │
+└───┘ └───┘ └───┘</code></pre><p><strong>设计原则</strong>:
+<li>无状态服务（易于水平扩展）</li>
+<li>数据分片（Sharding）</li>
+<li>负载均衡</li></p><h3>3.2 可用性（Availability）</h3><p><strong>定义</strong>: 系统在任何时候都能响应请求。</p><p><strong>可用性计算</strong>:
+<pre><code class="language-">可用性 = 正常运行时间 / 总时间</p><p>99%可用性：每年宕机 3.65 天
+99.9% 可用性：每年宕机 8.76 小时
+99.99% 可用性：每年宕机 52.6 分钟
+99.999% 可用性：每年宕机 5.26 分钟</code></pre><p><strong>提升可用性</strong>:
+<li>冗余副本</li>
+<li>自动故障转移</li>
+<li>多活部署</li></p><h3>3.3 一致性（Consistency）</h3><p><strong>定义</strong>: 所有节点看到的数据是一致的。</p><p><strong>权衡</strong>: 一致性、可用性、分区容错性无法同时满足（CAP 定理，下篇详解）。</p><h3>3.4 分区容错性（Partition Tolerance）</h3><p><strong>定义</strong>: 系统在部分节点无法通信时仍能运行。</p><p><strong>现实意义</strong>: 在分布式系统中，网络分区必然发生，因此<strong>P 是必须选择的</strong>。</p><h3>3.5 其他原则</h3><p><tr> 原则 | 说明 </tr>
+<tr>------|------</tr>
+<tr> <strong>透明性</strong> | 用户感知不到分布式存在 </tr>
+<tr> <strong>对等性</strong> | 节点地位平等（P2P） </tr>
+<tr> <strong>去中心化</strong> | 避免单点故障 </tr>
+<tr> <strong>自组织</strong> | 节点自动加入/离开 </tr></p><p>---</p><h2>四、分布式系统架构模式</h2><h3>4.1 客户端 - 服务器（C/S）</h3><pre><code class="language-">┌────────┐     ┌────────┐     ┌────────┐
+│ 客户端  │────▶│ 服务器  │◀────│ 客户端  │
+└────────┘     └────────┘     └────────┘
+                 │
+                 ▼
+            ┌────────┐
+            │ 数据库  │
+            └────────┘</code></pre><p><strong>特点</strong>:
+<li>中心化架构</li>
+<li>服务器是瓶颈和单点</li>
+<li>简单、易于管理</li></p><h3>4.2 三层架构</h3><pre><code class="language-">┌──────────────────────────────────────┐
+│            表示层（UI）               │
+└──────────────────────────────────────┘
+                  │
+                  ▼
+┌──────────────────────────────────────┐
+│            业务逻辑层                 │
+└──────────────────────────────────────┘
+                  │
+                  ▼
+┌──────────────────────────────────────┐
+│            数据访问层                 │
+└──────────────────────────────────────┘</code></pre><p><strong>特点</strong>:
+<li>关注点分离</li>
+<li>每层可独立扩展</li>
+<li>广泛应用</li></p><h3>4.3 微服务架构</h3><pre><code class="language-">┌─────────────────────────────────────────────┐
+│              API Gateway                     │
+└─────────────────────────────────────────────┘
+         │         │         │         │
+         ▼         ▼         ▼         ▼
+    ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐
+    │ 用户服务│ │ 订单服务│ │ 支付服务│ │ 库存服务│
+    └────────┘ └────────┘ └────────┘ └────────┘
+         │         │         │         │
+         ▼         ▼         ▼         ▼
+    ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐
+    │用户 DB │ │订单 DB │ │支付 DB │ │库存 DB │
+    └────────┘ └────────┘ └────────┘ └────────┘</code></pre><p><strong>特点</strong>:
+<li>服务独立部署</li>
+<li>技术栈灵活</li>
+<li>运维复杂度高</li></p><h3>4.4 事件驱动架构</h3><pre><code class="language-">┌─────────┐      ┌─────────┐      ┌─────────┐
+│ 生产者  │─────▶│ 消息队列 │─────▶│ 消费者  │
+└─────────┘      └─────────┘      └─────────┘
+                     │
+                     ▼
+               ┌─────────┐
+               │ 消费者 2  │
+               └─────────┘</code></pre><p><strong>特点</strong>:
+<li>异步解耦</li>
+<li>削峰填谷</li>
+<li>最终一致性</li></p><p>---</p><h2>五、实战：搭建简单分布式系统</h2><h3>5.1 服务注册与发现</h3><pre><code class="language-python"># 简化的服务注册中心
+class ServiceRegistry:
+    def __init__(self):
+        self.services = {}  # {service_name: [instances]}
+    
+    def register(self, service_name, instance):
+        if service_name not in self.services:
+            self.services[service_name] = []
+        self.services[service_name].append(instance)
+    
+    def discover(self, service_name):
+        return self.services.get(service_name, [])
+    
+    def heartbeat(self, service_name, instance):
+        # 更新心跳时间
+        pass</code></pre><h3>5.2 负载均衡</h3><pre><code class="language-python">import random
+import hashlib</p><p>class LoadBalancer:
+    def __init__(self, instances):
+        self.instances = instances
+        self.index = 0
+    
+    # 轮询
+    def round_robin(self):
+        instance = self.instances[self.index]
+        self.index = (self.index + 1) % len(self.instances)
+        return instance
+    
+    # 随机
+    def random_choice(self):
+        return random.choice(self.instances)
+    
+    # 一致性哈希
+    def consistent_hash(self, key):
+        hash_value = int(hashlib.md5(key.encode()).hexdigest(), 16)
+        index = hash_value % len(self.instances)
+        return self.instances[index]</code></pre><h3>5.3 分布式锁（基于 Redis）</h3><pre><code class="language-python">import redis
+import time
+import uuid</p><p>class DistributedLock:
+    def __init__(self, redis_client, lock_name):
+        self.redis = redis_client
+        self.lock_name = f"lock:{lock_name}"
+        self.lock_id = str(uuid.uuid4())
+        self.timeout = 10  # 秒
+    
+    def acquire(self):
+        end_time = time.time() + self.timeout
+        while time.time() < end_time:
+            # SETNX + EX
+            if self.redis.set(self.lock_name, self.lock_id, 
+                            nx=True, ex=self.timeout):
+                return True
+            time.sleep(0.1)
+        return False
+    
+    def release(self):
+        # Lua 脚本保证原子性
+        lua_script = """
+        if redis.call("get", KEYS[1]) == ARGV[1] then
+            return redis.call("del", KEYS[1])
+        else
+            return 0
+        end
+        """
+        self.redis.eval(lua_script, 1, self.lock_name, self.lock_id)</code></pre><p>---</p><h2>六、最佳实践</h2><h3>6.1 设计原则</h3><p>1. <strong>假设网络不可靠</strong>: 总是处理超时和失败
+2. <strong>假设节点会故障</strong>: 设计容错机制
+3. <strong>避免单点</strong>: 任何组件都要有备份
+4. <strong>监控和告警</strong>: 及时发现问题
+5. <strong>自动化运维</strong>: 减少人工干预</p><h3>6.2 技术选型</h3><p><tr> 需求 | 推荐方案 </tr>
+<tr>------|----------</tr>
+<tr> <strong>服务注册</strong> | Consul、etcd、ZooKeeper、Nacos </tr>
+<tr> <strong>配置管理</strong> | Apollo、Nacos、Consul </tr>
+<tr> <strong>消息队列</strong> | Kafka、RabbitMQ、RocketMQ </tr>
+<tr> <strong>分布式锁</strong> | Redis、ZooKeeper、etcd </tr>
+<tr> <strong>链路追踪</strong> | Jaeger、Zipkin、SkyWalking </tr>
+<tr> <strong>监控告警</strong> | Prometheus + Grafana </tr></p><h3>6.3 监控指标</h3><pre><code class="language-">系统指标:
+<li>CPU 使用率</li>
+<li>内存使用率</li>
+<li>磁盘 IO</li>
+<li>网络带宽</li></p><p>应用指标:
+<li>QPS（每秒请求数）</li>
+<li>响应时间（P50、P95、P99）</li>
+<li>错误率</li>
+<li>超时率</li></p><p>业务指标:
+<li>订单量</li>
+<li>支付成功率</li>
+<li>用户活跃度</code></pre></li></p><p>---</p><h2>七、常见问题</h2><h3>Q1: 分布式系统一定比单机好吗？</h3><p><strong>A</strong>: 不一定。分布式系统带来复杂性和成本：
+<li>开发复杂度增加</li>
+<li>运维成本上升</li>
+<li>网络延迟问题</li>
+<li>数据一致性挑战</li></p><p><strong>建议</strong>: 单机能解决时，不要上分布式。</p><h3>Q2: 如何保证分布式事务的一致性？</h3><p><strong>A</strong>: 常见方案：
+<li><strong>2PC</strong>: 强一致性，性能差</li>
+<li><strong>TCC</strong>: 补偿事务，业务侵入大</li>
+<li><strong>本地消息表</strong>: 最终一致性</li>
+<li><strong>Saga</strong>: 长事务编排</li>
+<li><strong>Seata</strong>: 阿里开源方案</li></p><p>详见后续《分布式事务解决方案》。</p><h3>Q3: 如何选择分片键？</h3><p><strong>A</strong>: 原则：
+1. 高频查询字段
+2. 数据分布均匀
+3. 避免热点</p><p>示例：
+<pre><code class="language-">✅ 用户 ID: 分布均匀
+✅ 订单 ID: 按用户分片
+❌ 时间：导致热点（最新数据集中）
+❌ 状态：分布不均（如 90% 是"已完成"）</code></pre><h3>Q4: 如何处理分布式系统的幂等性？</h3><p><strong>A</strong>: 
+<pre><code class="language-python"># 方案 1: 唯一请求 ID
+def process_request(request_id, data):
+    if redis.exists(f"processed:{request_id}"):
+        return get_cached_result(request_id)
+    result = do_process(data)
+    redis.set(f"processed:{request_id}", result, ex=3600)
+    return result</p><h1>方案 2: 数据库唯一键</h1>
+INSERT INTO orders (order_id, ...) 
+VALUES (123, ...)
+ON DUPLICATE KEY UPDATE ...</code></pre><p>---</p><h2>总结</h2><p>本文介绍了分布式系统的基础理论：</p><p><strong>核心挑战</strong>:
+1. 网络不可靠（分区、延迟、丢包）
+2. 时钟不同步（无法准确判断事件顺序）
+3. 节点故障（崩溃、拜占庭）
+4. 数据一致性（多副本同步）
+5. 并发控制（竞态条件）</p><p><strong>设计原则</strong>:
+<li>可扩展性：横向扩展优于纵向扩展</li>
+<li>可用性：冗余副本、故障转移</li>
+<li>一致性：根据场景选择一致性级别</li>
+<li>分区容错性：必须支持</li></p><p><strong>架构模式</strong>:
+<li>C/S 架构：简单、中心化</li>
+<li>三层架构：关注点分离</li>
+<li>微服务：独立部署、灵活</li>
+<li>事件驱动：异步解耦</li></p><p><strong>关键要点</strong>:
+1. 分布式系统故障是常态，不是异常
+2. CAP 三者不可兼得，需要权衡
+3. 监控和告警是分布式系统的生命线
+4. 自动化运维降低人工成本</p><p>---</p><h2>延伸学习</h2>
+<li>下一篇：<a href="distributed-02-cap-base.md">CAP 定理与 BASE 理论</a></li>
+<li>推荐书籍：《分布式系统原理与范型》、《数据密集型应用系统设计》</li>
+<li>推荐课程：MIT 6.824 Distributed Systems</li></p><p>---</p><p><em>本文是分布式架构系列第 1 篇，下一篇将深入讲解 CAP 定理和 BASE 理论。</em>
+</p>
+      
+      <a href="../index.html" class="back-link">← 返回首页</a>
+    </article>
+  </div>
+  
+  <footer>
+    <p>© 2026 技术博客。Powered by Static Blog.</p>
+  </footer>
+</body>
+</html>
