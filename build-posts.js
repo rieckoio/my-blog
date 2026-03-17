@@ -35,9 +35,27 @@ function markdownToHtml(md) {
   // 斜体
   html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
   
-  // 链接（将 .md 链接转为 .html）
+  // 链接处理（将 .md 链接转为 .html，并检查文件是否存在）
+  const existingFiles = new Set();
+  try {
+    const postsDir = path.join(__dirname, 'posts');
+    if (fs.existsSync(postsDir)) {
+      fs.readdirSync(postsDir).forEach(f => existingFiles.add(f.replace('.md', '.html')));
+    }
+  } catch(e) {}
+  
   html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
+    // 将 .md 结尾的链接转为 .html
     const fixedUrl = url.replace(/\.md$/, '.html');
+    
+    // 检查是否是下一篇/上一篇链接，且文件不存在
+    if (text.includes('下一篇') || text.includes('上一篇')) {
+      if (!existingFiles.has(path.basename(fixedUrl))) {
+        // 文件不存在，显示为纯文本
+        return `<span style="color: #999;">${text}（待发布）</span>`;
+      }
+    }
+    
     return `<a href="${fixedUrl}">${text}</a>`;
   });
   

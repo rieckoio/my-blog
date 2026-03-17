@@ -3,7 +3,7 @@
 > **系列**: 分布式架构系列第 1 篇  
 > **难度**: ⭐⭐ 基础  
 > **阅读时间**: 约 25 分钟  
-> **上一篇**: 无 | **下一篇**: [CAP 定理与 BASE 理论](distributed-02-cap-base.md)
+> **上一篇**: 无 | **下一篇**: CAP 定理与 BASE 理论（待发布）
 
 ---
 
@@ -586,7 +586,7 @@ ON DUPLICATE KEY UPDATE ...
 
 ## 延伸学习
 
-- 下一篇：[CAP 定理与 BASE 理论](distributed-02-cap-base.md)
+- 下一篇：**CAP 定理与 BASE 理论**（待发布）
 - 推荐书籍：《分布式系统原理与范型》、《数据密集型应用系统设计》
 - 推荐课程：MIT 6.824 Distributed Systems
 

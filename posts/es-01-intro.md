@@ -3,7 +3,7 @@
 > **系列**: Elasticsearch 系列第 1 篇  
 > **难度**: ⭐⭐ 入门  
 > **阅读时间**: 约 20 分钟  
-> **上一篇**: 无 | **下一篇**: [索引设计与映射详解](es-02-mapping.md)
+> **上一篇**: 无 | **下一篇**: 索引设计与映射详解（待发布）
 
 ---
 
@@ -707,7 +707,7 @@ PUT /_cluster/settings
 
 ## 延伸学习
 
-- 下一篇：[索引设计与映射详解](es-02-mapping.md)
+- 下一篇：**索引设计与映射详解**（待发布）
 - 官方文档：https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html
 - 实战练习：安装 ES，完成本文所有示例
 

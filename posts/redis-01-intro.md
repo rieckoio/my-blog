@@ -3,7 +3,7 @@
 > **系列**: Redis 系列第 1 篇  
 > **难度**: ⭐ 入门  
 > **阅读时间**: 约 15 分钟  
-> **上一篇**: 无 | **下一篇**: [Redis 持久化：RDB 与 AOF 详解](redis-02-persistence.md)
+> **上一篇**: 无 | **下一篇**: Redis 持久化：RDB 与 AOF 详解（待发布）
 
 ---
 
@@ -412,7 +412,7 @@ SLOWLOG GET 10
 
 ## 延伸学习
 
-- 下一篇：[Redis 持久化：RDB 与 AOF 详解](redis-02-persistence.md)
+- 下一篇：**Redis 持久化：RDB 与 AOF 详解**（待发布）
 - 官方文档：https://redis.io/documentation
 - 实战练习：安装 Redis，完成本文所有示例
 
